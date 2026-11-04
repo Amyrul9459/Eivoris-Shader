@@ -62,12 +62,12 @@
 #define NL_END_HORIZON_COL   vec3(0.6,0.02,0.6)
 
 /* Water surface and tint */
-#define NL_WATER_TRANSPARENCY 0.80
+#define NL_WATER_TRANSPARENCY 0.38
 #define NL_WATER_BUMP 0.16
 #define NL_WATER_WAVE_SPEED 0.82
 #define NL_WATER_TEX_OPACITY 0.04
 #define NL_WATER_WAVE
-#define NL_WATER_TINT vec3(0.55,0.78,0.88)
+#define NL_WATER_TINT vec3(0.68,0.86,0.96)
 
 /* Underwater */
 #define NL_UNDERWATER_BRIGHTNESS 0.95
@@ -140,7 +140,7 @@
 #define NL_MOON_TILT 45.0
 /* God rays disabled: no custom volumetric fog pass. */
 #undef NL_GODRAY
-#define NL_GROUND_RAIN_WETNESS 1.0
+#define NL_GROUND_RAIN_WETNESS 1.0 /* legacy compatibility; wet finish is permanent */
 #define NL_GROUND_RAIN_PUDDLES 0.7
 #define NL_ENTITY_BRIGHTNESS 0.65
 #define NL_ENTITY_EDGE_HIGHLIGHT 0.41
