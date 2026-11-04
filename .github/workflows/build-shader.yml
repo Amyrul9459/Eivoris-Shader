@@ -30,7 +30,7 @@ jobs:
         run: |
           git clone https://github.com/devendrn/newb-x-mcbe.git toolchain
           git -C toolchain checkout 0d4c1536b21ee4a5152dc935fc84aa0aedaec8e6
-          rm -rf toolchain/src/materials toolchain/src/newb
+          rm -rf toolchain/src/materials
           mkdir -p toolchain/src
           cp -R src/materials toolchain/src/materials
           mkdir -p toolchain/src/newb
@@ -38,6 +38,9 @@ jobs:
           cp -R src/eivoris toolchain/src/eivoris
           rm -rf toolchain/assets
           cp -R assets toolchain/assets
+
+      - name: Apply EIVORIS water and lighting overrides
+        run: python src/eivoris/apply_newb_overrides.py
 
       - name: Install compiler dependencies
         working-directory: toolchain
