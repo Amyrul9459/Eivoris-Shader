@@ -72,6 +72,12 @@ float eivorisWaterFresnel(float cosine, float f0) {
   return f0 + (1.0 - f0) * f2 * f2 * f;
 }
 
+// Compatibility entry point used by the upstream wet-ground/actor materials.
+// Keep this shared helper name even though EIVORIS water uses its own wrapper.
+float calculateFresnel(float cosR, float r0) {
+  return eivorisWaterFresnel(cosR, r0);
+}
+
 vec4 nlWater(
   inout vec4 color, inout vec3 wPos, nl_skycolor skycol, nl_environment env, vec4 COLOR, vec3 viewDir,
   vec3 cPos, vec3 tiledCpos, vec3 gPos, vec3 CAMERA_POS, vec3 light, vec3 torchColor, vec2 lit,
