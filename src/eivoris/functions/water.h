@@ -36,6 +36,13 @@ vec2 eivorisWaveSlope(vec2 p, float t) {
        + c3 * vec2(-0.18, -0.98);
 }
 
+// Shared compatibility helper used by other RenderChunk material functions.
+float calculateFresnel(float cosR, float r0) {
+  float f = 1.0 - clamp(cosR, 0.0, 1.0);
+  float f2 = f * f;
+  return r0 + (1.0 - r0) * f2 * f2 * f;
+}
+
 float eivorisFresnel(float cosR, float r0) {
   float f = 1.0 - clamp(cosR, 0.0, 1.0);
   float f2 = f * f;
