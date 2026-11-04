@@ -5,7 +5,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "src/eivoris/**"
+      - "src/**"
+      - "assets/**"
       - ".github/workflows/build-shader.yml"
 
 permissions:
@@ -15,7 +16,7 @@ jobs:
   build-android:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout EIVORIS
+      - name: Checkout EIVORIS source
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -23,103 +24,89 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Fetch pinned RenderDragon shader source
+      # This repository is used only for the generic Lazurite/shaderc build
+      # wrapper and BGFX include/toolchain. Its shader source is never used.
+      - name: Fetch shader compiler toolchain
         run: |
-          git clone https://github.com/devendrn/newb-x-mcbe.git upstream
-          git -C upstream checkout 0d4c1536b21ee4a5152dc935fc84aa0aedaec8e6
+          git clone https://github.com/devendrn/newb-x-mcbe.git toolchain
+          git -C toolchain checkout 0d4c1536b21ee4a5152dc935fc84aa0aedaec8e6
+          rm -rf toolchain/src/materials toolchain/src/newb
+          mkdir -p toolchain/src
+          cp -R src/materials toolchain/src/materials
+          mkdir -p toolchain/src/newb
+          cp src/newb/pack_config.toml toolchain/src/newb/pack_config.toml
+          cp -R src/eivoris toolchain/src/eivoris
+          rm -rf toolchain/assets
+          cp -R assets toolchain/assets
 
-      - name: Apply EIVORIS configuration
-        run: |
-          cp src/eivoris/config.h upstream/src/newb/config.h
-          cp src/eivoris/pack_config.toml upstream/src/newb/pack_config.toml
-
-      - name: Apply EIVORIS water implementation
-        run: |
-          mkdir -p upstream/src/newb/functions
-          cp src/eivoris/functions/water.h upstream/src/newb/functions/water.h
-
-      - name: Install build dependencies
-        working-directory: upstream
+      - name: Install compiler dependencies
+        working-directory: toolchain
         run: python -m pip install -r requirements.txt
 
-      - name: Prepare shader compiler and material data
-        working-directory: upstream
+      - name: Prepare shader compiler and vanilla material metadata
+        working-directory: toolchain
         run: ./build.sh setup
 
-      - name: Compile Android material-bin resource pack
-        working-directory: upstream
-        run: ./build.sh pack -p android -v 1
+      - name: Compile EIVORIS RenderChunk material
+        working-directory: toolchain
+        run: ./build.sh pack -p android -v 0
 
-      - name: Validate MTBinLoader2 material payload
-        working-directory: upstream
+      - name: Validate and name MTBinLoader2 package
+        working-directory: toolchain
         run: |
           python - <<'PY'
           from pathlib import Path
           from zipfile import ZipFile, ZIP_DEFLATED
-          import json
-          import os
-          import tempfile
+          import json, os, tempfile
 
           archives = list(Path("build").glob("*.mcpack"))
           if len(archives) != 1:
-              raise SystemExit(f"Expected exactly one .mcpack, found {len(archives)}")
-
+              raise SystemExit(f"Expected one mcpack, found {len(archives)}")
           archive = archives[0]
+
           with ZipFile(archive, "r") as source:
               names = source.namelist()
-              material_bins = [
-                  name for name in names
-                  if name.startswith("renderer/materials/")
-                  and name.endswith(".material.bin")
+              bins = [
+                  n for n in names
+                  if n.startswith("renderer/materials/") and n.endswith(".material.bin")
               ]
-              if not material_bins:
-                  raise SystemExit(
-                      "No renderer/materials/*.material.bin payload found; "
-                      "this pack cannot be validated for MTBinLoader2."
-                  )
+              if not bins:
+                  raise SystemExit("No compiled RenderDragon material-bin found")
+              if "manifest.json" not in names:
+                  raise SystemExit("manifest.json missing")
+              entries = {n: source.read(n) for n in names}
 
-              manifest_name = "manifest.json"
-              if manifest_name not in names:
-                  raise SystemExit("manifest.json missing from shader pack")
-
-              entries = {name: source.read(name) for name in names}
-
-          manifest = json.loads(entries[manifest_name].decode("utf-8"))
-          header = manifest.get("header", {})
-          description = header.get("description", "")
-          description = description.replace(
-              "Only works with MB Loader",
-              "Requires MaterialBinLoader2 (MTBinLoader2)"
+          manifest = json.loads(entries["manifest.json"].decode("utf-8"))
+          manifest["header"]["description"] = (
+              "EIVORIS independent RenderDragon water and world lighting. "
+              "Requires MaterialBinLoader2 (MTBinLoader2)."
           )
-          header["description"] = description
-          manifest["header"] = header
-          entries[manifest_name] = json.dumps(
+          entries["manifest.json"] = json.dumps(
               manifest, ensure_ascii=False, indent=2
           ).encode("utf-8")
 
-          fd, temp_name = tempfile.mkstemp(suffix=".mcpack")
+          final_path = Path("build/eivoris-shader.mcpack")
+          fd, tmp = tempfile.mkstemp(suffix=".mcpack")
           os.close(fd)
           try:
-              with ZipFile(temp_name, "w", ZIP_DEFLATED) as target:
+              with ZipFile(tmp, "w", ZIP_DEFLATED) as target:
                   for name, data in entries.items():
                       target.writestr(name, data)
-              os.replace(temp_name, archive)
+              os.replace(tmp, final_path)
           finally:
-              if os.path.exists(temp_name):
-                  os.unlink(temp_name)
-
-          print(f"Validated {len(material_bins)} RenderDragon material-bin files:")
-          for name in material_bins:
-              print(f" - {name}")
-          final_name = Path("build") / "EIVORIS-Shader-1.1-Android.mcpack"
-          archive.rename(final_name)
-          print(f"MTBinLoader2-ready resource-pack container: {final_name}")
+              if os.path.exists(tmp):
+                  os.unlink(tmp)
+          archive.unlink()
+          print("Compiled material-bin payload:")
+          for name in bins:
+              print(" -", name)
+          print("Package:", final_path)
           PY
 
-      - name: Upload EIVORIS MTBinLoader2 pack
+      - name: Upload EIVORIS Shader
         uses: actions/upload-artifact@v4
         with:
-          name: EIVORIS-MTBinLoader2-Android
-          path: upstream/build/*.mcpack
+          name: eivoris-shader
+          path: toolchain/build/eivoris-shader.mcpack
           if-no-files-found: error
           retention-days: 30
