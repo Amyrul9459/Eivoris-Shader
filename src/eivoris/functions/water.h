@@ -43,8 +43,38 @@ vec3 eivorisNoiseGradient(vec2 p) {
   return vec3(value, dx, dy);
 }
 
-// Three animated scales: broad rolling pattern, medium ripples, fine detail.
-// Derivatives are scaled back into world-space slope units.
+// Four crossing travelling wave bands. The returned vector contains
+// (height, dHeight/dX, dHeight/dZ), so the same field drives both
+// actual near-camera vertex displacement and matching surface normals.
+vec3 eivorisWaterWaveField(vec2 worldXZ, float time) {
+  vec3 field = vec3(0.0);
+
+  float p0 = dot(worldXZ, vec2(0.80, 0.60)) * 1.85 + time * 1.35;
+  float p1 = dot(worldXZ, vec2(-0.48, 0.88)) * 2.95 - time * 1.75;
+  float p2 = dot(worldXZ, vec2(0.96, -0.28)) * 4.35 + time * 2.20;
+  float p3 = dot(worldXZ, vec2(0.32, 0.95)) * 6.10 - time * 2.65;
+
+  float s0 = sin(p0), c0 = cos(p0);
+  float s1 = sin(p1), c1 = cos(p1);
+  float s2 = sin(p2), c2 = cos(p2);
+  float s3 = sin(p3), c3 = cos(p3);
+
+  field.x += 0.0140 * s0;
+  field.yz += 0.0140 * 1.85 * c0 * vec2(0.80, 0.60);
+
+  field.x += 0.0090 * s1;
+  field.yz += 0.0090 * 2.95 * c1 * vec2(-0.48, 0.88);
+
+  field.x += 0.0055 * s2;
+  field.yz += 0.0055 * 4.35 * c2 * vec2(0.96, -0.28);
+
+  field.x += 0.0030 * s3;
+  field.yz += 0.0030 * 6.10 * c3 * vec2(0.32, 0.95);
+
+  return field;
+}
+
+// Additional smooth value-noise detail breaks up perfectly regular waves.
 vec2 eivorisWaterSlope(vec2 worldXZ, float time) {
   vec2 p0 = worldXZ * vec2(0.75, 0.62)
           + vec2(time * 0.11, -time * 0.07);
@@ -60,10 +90,10 @@ vec2 eivorisWaterSlope(vec2 worldXZ, float time) {
   vec2 g0 = n0.yz * vec2(0.75, 0.62);
   vec2 g1 = n1.yz * 1.65;
   vec2 g2 = n2.yz * 3.25;
+  vec2 noiseSlope = g0 * 0.075 + g1 * 0.035 + g2 * 0.012;
 
-  // Lower amplitudes at higher frequencies keep the water calm,
-  // while the gradient remains visible close to the camera.
-  return g0 * 0.105 + g1 * 0.046 + g2 * 0.014;
+  vec3 wave = eivorisWaterWaveField(worldXZ, time);
+  return wave.yz * 1.35 + noiseSlope;
 }
 
 float eivorisWaterFresnel(float cosine, float f0) {
@@ -83,13 +113,18 @@ vec4 nlWater(
   vec3 cPos, vec3 tiledCpos, vec3 gPos, vec3 CAMERA_POS, vec3 light, vec3 torchColor, vec2 lit,
   float fractCposY, float camDist, highp float t
 ) {
-  // Fragment-normal-only water: no vertex displacement, so the surface
-  // never rises through neighboring block boundaries.
-  vec2 slope = eivorisWaterSlope(gPos.xz, t);
+  // A low-amplitude height field drives real vertex movement near the
+  // player. The fade prevents distant chunk geometry from shimmering.
+  vec3 waveField = eivorisWaterWaveField(gPos.xz, t);
+  float displacementFade = 1.0 - smoothstep(12.0, 22.0, camDist);
+  if (fractCposY > 0.0) {
+    wPos.y += waveField.x * displacementFade;
+  }
 
-  // Retain full nearby ripple definition; fade only a little at distance.
-  float detailFade = 1.0 - smoothstep(72.0, 144.0, camDist);
-  vec2 waterSlope = slope * mix(0.72, 1.0, detailFade);
+  // Keep dense normal ripples visible at close range and at distance.
+  vec2 slope = eivorisWaterSlope(gPos.xz, t);
+  float detailFade = 1.0 - smoothstep(96.0, 176.0, camDist);
+  vec2 waterSlope = slope * mix(0.82, 1.0, detailFade);
 
   vec3 nrm;
   if (fractCposY > 0.0) {
