@@ -16,18 +16,27 @@ float nlWindblow(vec3 pos, float t){
 
 // Stable world-space rain impact field. It creates small expanding rings
 // without adding geometry or depending on texture UVs.
+// Animated, world-anchored circular rain marks on block surfaces.
+// This is a surface shader effect, not an engine particle emitter.
 float eivorisRainImpact(vec2 worldXZ, float t) {
-  vec2 cell = floor(worldXZ * 0.72);
-  vec2 local = fract(worldXZ * 0.72) - 0.5;
+  vec2 cell = floor(worldXZ * 0.82);
+  vec2 local = fract(worldXZ * 0.82) - 0.5;
   float seed = fastRand(cell);
-  vec2 center = vec2(fract(seed * 17.13), fract(seed * 31.71)) - 0.5;
-  float phase = fract(t * (1.15 + seed * 0.55) + seed);
+  vec2 center = (vec2(fract(seed * 17.13), fract(seed * 31.71)) - 0.5) * 0.66;
+  float phase = fract(t * (0.82 + seed * 0.34) + seed);
   float radius = length(local - center);
-  float ringRadius = phase * 0.62;
-  float ring = exp(-abs(radius - ringRadius) * 72.0);
-  float life = smoothstep(0.02, 0.16, phase) * (1.0 - smoothstep(0.78, 1.0, phase));
-  float core = exp(-radius * radius * 95.0) * (1.0 - smoothstep(0.0, 0.12, phase));
-  return clamp((ring * 0.72 + core * 0.28) * life, 0.0, 1.0);
+
+  float radiusA = 0.04 + phase * 0.43;
+  float radiusB = 0.04 + fract(phase + 0.48) * 0.43;
+  float ringA = exp(-abs(radius - radiusA) * 92.0);
+  float ringB = exp(-abs(radius - radiusB) * 82.0);
+  float lifeA = smoothstep(0.02, 0.12, phase) * (1.0 - smoothstep(0.82, 1.0, phase));
+  float lifeB = smoothstep(0.02, 0.12, fract(phase + 0.48))
+              * (1.0 - smoothstep(0.82, 1.0, fract(phase + 0.48)));
+  float centerDimple = exp(-radius * radius * 150.0)
+                     * (1.0 - smoothstep(0.0, 0.18, phase));
+  return clamp(ringA * lifeA * 0.62 + ringB * lifeB * 0.34
+             + centerDimple * 0.22, 0.0, 1.0);
 }
 
 vec4 nlRefl(
@@ -36,60 +45,42 @@ vec4 nlRefl(
 ) {
   vec4 wetRefl = vec4(0.0,0.0,0.0,0.0);
 
-  #ifndef NL_GROUND_REFL
-  if (env.rainFactor > 0.0) {
-  #endif
+  // Permanent subtle wet finish: independent of the current weather state.
+  float wetness = lit.y * lit.y;
+  float endDist = renderDist * 0.6;
+  if (camDist < endDist && wPos.y < 0.0) {
+    float cosR = max(viewDir.y, 0.0);
+    float puddles = max(1.0 - NL_GROUND_RAIN_PUDDLES * fastRand(tiledCpos.xz), 0.0);
+    float reflective = wetness * puddles * 0.22;
 
-    float wetness = lit.y*lit.y;
-    float endDist = renderDist*0.6;
-    if (camDist < endDist) {
-      float cosR = max(viewDir.y, 0.0);
-      float puddles = max(1.0 - NL_GROUND_RAIN_PUDDLES*fastRand(tiledCpos.xz), 0.0);
-
-      #ifndef NL_GROUND_REFL
-        wetness *= puddles;
-        float reflective = wetness*env.rainFactor*NL_GROUND_RAIN_WETNESS;
-      #else
-        float reflective = NL_GROUND_REFL;
-        if (!env.end && !env.nether) reflective *= wetness;
-        wetness *= puddles;
-        reflective = mix(reflective, wetness, env.rainFactor);
-      #endif
-
-      if (wPos.y < 0.0) {
-        // Slightly perturb the reflected direction with fine rain ripples.
-        // The impact rings are world-anchored, so they do not swim with UVs.
-        float impact = eivorisRainImpact((wPos + CAMERA_POS).xz, t);
-        color.rgb += vec3(0.20, 0.32, 0.38) * impact * env.rainFactor * 0.10;
-        vec2 rippleDir = normalize((wPos + CAMERA_POS).xz + vec2(0.001));
-        viewDir.xz += rippleDir * impact * 0.018 * env.rainFactor;
-        viewDir = normalize(viewDir);
-        viewDir.y = -viewDir.y;
-        wetRefl.rgb = nlRenderSky(skycol, env, viewDir, t, false);
-
-        #ifdef NL_CLOUD_AURORA_REFLECTION
-          vec4 cloudRefl = nlCloudAuroraReflection(skycol, env, viewDir, wPos, CAMERA_POS, t);
-          wetRefl.rgb = mix(wetRefl.rgb, cloudRefl.rgb, cloudRefl.a);
-        #endif
-
-        wetRefl.rgb += torchColor*lit.x*NL_TORCHLIGHT_INTENSITY;
-        // Moving narrow glints make individual impact rings readable.
-        float glint = pow(max(0.0, 1.0 - abs(impact - 0.52) * 5.0), 5.0);
-        wetRefl.rgb += vec3(0.62, 0.76, 0.82) * glint * env.rainFactor * 0.16;
-
-        wetRefl.a = calculateFresnel(cosR, 0.03)*reflective;
-        wetRefl.a *= clamp(2.0-2.0*camDist/endDist, 0.0, 1.0);
-        wetRefl.a *= 1.0 + impact * 0.22 * env.rainFactor;
-      }
+    // Rain circles animate only while raining, while the wet material stays permanent.
+    float impact = eivorisRainImpact((wPos + CAMERA_POS).xz, t) * env.rainFactor;
+    if (impact > 0.001) {
+      color.rgb += vec3(0.24, 0.34, 0.39) * impact * 0.22;
+      vec2 rippleDir = normalize((wPos + CAMERA_POS).xz + vec2(0.001));
+      viewDir.xz += rippleDir * impact * 0.014;
+      viewDir = normalize(viewDir);
     }
 
-    // Wet surfaces darken and become more reflective as rain accumulates.
-    color.rgb *= 1.0 - 0.4*wetness*env.rainFactor;
+    viewDir.y = -viewDir.y;
+    wetRefl.rgb = nlRenderSky(skycol, env, viewDir, t, false);
 
-  #ifndef NL_GROUND_REFL
+    #ifdef NL_CLOUD_AURORA_REFLECTION
+      vec4 cloudRefl = nlCloudAuroraReflection(skycol, env, viewDir, wPos, CAMERA_POS, t);
+      wetRefl.rgb = mix(wetRefl.rgb, cloudRefl.rgb, cloudRefl.a);
+    #endif
+
+    wetRefl.rgb += torchColor * lit.x * NL_TORCHLIGHT_INTENSITY;
+    float glint = pow(max(0.0, 1.0 - abs(impact - 0.48) * 5.0), 5.0);
+    wetRefl.rgb += vec3(0.62, 0.76, 0.82) * glint * env.rainFactor * 0.18;
+
+    wetRefl.a = calculateFresnel(cosR, 0.03) * reflective;
+    wetRefl.a *= clamp(2.0 - 2.0 * camDist / endDist, 0.0, 1.0);
+    wetRefl.a *= 1.0 + impact * 0.18;
   }
-  #endif
 
+  // Slight permanent darkening gives stone, soil and other blocks a damp finish.
+  color.rgb *= 1.0 - 0.13 * wetness;
   return wetRefl;
 }
 
