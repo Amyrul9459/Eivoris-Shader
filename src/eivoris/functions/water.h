@@ -49,10 +49,10 @@ vec3 eivorisNoiseGradient(vec2 p) {
 vec3 eivorisWaterWaveField(vec2 worldXZ, float time) {
   vec3 field = vec3(0.0);
 
-  float p0 = dot(worldXZ, vec2(0.80, 0.60)) * 1.85 + time * 1.72;
-  float p1 = dot(worldXZ, vec2(-0.48, 0.88)) * 2.95 - time * 2.18;
-  float p2 = dot(worldXZ, vec2(0.96, -0.28)) * 4.35 + time * 2.72;
-  float p3 = dot(worldXZ, vec2(0.32, 0.95)) * 6.10 - time * 3.25;
+  float p0 = dot(worldXZ, vec2(0.80, 0.60)) * 1.85 + time * 1.35;
+  float p1 = dot(worldXZ, vec2(-0.48, 0.88)) * 2.95 - time * 1.75;
+  float p2 = dot(worldXZ, vec2(0.96, -0.28)) * 4.35 + time * 2.20;
+  float p3 = dot(worldXZ, vec2(0.32, 0.95)) * 6.10 - time * 2.65;
 
   float s0 = sin(p0), c0 = cos(p0);
   float s1 = sin(p1), c1 = cos(p1);
@@ -82,22 +82,19 @@ vec2 eivorisWaterSlope(vec2 worldXZ, float time) {
           + vec2(-time * 0.19, time * 0.13);
   vec2 p2 = worldXZ * 3.25
           + vec2(time * 0.34, time * 0.29);
-  vec2 p3 = worldXZ * 5.4
-          + vec2(-time * 0.43, time * 0.37);
+  
 
   vec3 n0 = eivorisNoiseGradient(p0);
   vec3 n1 = eivorisNoiseGradient(p1);
   vec3 n2 = eivorisNoiseGradient(p2);
-  vec3 n3 = eivorisNoiseGradient(p3);
 
   vec2 g0 = n0.yz * vec2(0.75, 0.62);
   vec2 g1 = n1.yz * 1.65;
   vec2 g2 = n2.yz * 3.25;
-  vec2 g3 = n3.yz * 5.4;
-  vec2 noiseSlope = g0 * 0.105 + g1 * 0.060 + g2 * 0.030 + g3 * 0.016;
+  vec2 noiseSlope = g0 * 0.105 + g1 * 0.060 + g2 * 0.030;
 
   vec3 wave = eivorisWaterWaveField(worldXZ, time);
-  return wave.yz * 1.75 + noiseSlope;
+  return wave.yz + noiseSlope;
 }
 
 float eivorisWaterFresnel(float cosine, float f0) {
@@ -120,14 +117,14 @@ vec4 nlWater(
   // A low-amplitude height field drives real vertex movement near the
   // player. The fade prevents distant chunk geometry from shimmering.
   vec3 waveField = eivorisWaterWaveField(gPos.xz, t);
-  float displacementFade = 1.0 - smoothstep(14.0, 26.0, camDist);
+  float displacementFade = 1.0 - smoothstep(12.0, 22.0, camDist);
   if (fractCposY > 0.0) {
     wPos.y += waveField.x * displacementFade;
   }
 
   // Keep dense normal ripples visible at close range and at distance.
   vec2 slope = eivorisWaterSlope(gPos.xz, t);
-  float detailFade = 1.0 - smoothstep(128.0, 208.0, camDist);
+  float detailFade = 1.0 - smoothstep(96.0, 176.0, camDist);
   vec2 waterSlope = slope * mix(0.82, 1.0, detailFade);
 
   vec3 nrm;
