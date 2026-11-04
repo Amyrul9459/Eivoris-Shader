@@ -29,18 +29,18 @@
 
 /* Color correction */
 #define NL_TONEMAP_TYPE 4              // 1:Exponential, 2:Reinhard, 3:Extended Reinhard, 4:ACES
-#define NL_GAMMA 1.08                  // 0.3 low ~ 2.0 high
-#define NL_EXPOSURE 1.12              // [toggle] 0.5 dark ~ 3.0 bright
-#define NL_SATURATION 1.08            // [toggle] 0.0 grayscale ~ 4.0 super saturated
+#define NL_GAMMA 1.04                  // slightly cleaner midtones
+#define NL_EXPOSURE 1.08              // [toggle] controlled cinematic exposure
+#define NL_SATURATION 1.06            // [toggle] natural color separation
 //#define NL_TINT                      // [toggle] enable light/dark tone tinting
 #define NL_TINT_LOW  vec3(0.3,0.5,1.4) // color tint for dark tone
 #define NL_TINT_HIGH vec3(1.4,0.7,0.3) // color tint for light tone
 
 /* Lighting */
-#define NL_SUNLIGHT_INTENSITY   2.6  // 1.0 weak ~ 5.0 bright
+#define NL_SUNLIGHT_INTENSITY   2.8  // warm, stronger direct daylight
 #define NL_TORCHLIGHT_INTENSITY 1.0  // 0.5 weak ~ 3.0 bright
-#define NL_SHADOW_INTENSITY     0.85  // 0.0 no shadow ~ 1.0 strong shadow
-#define NL_MIN_LIGHTING_BOOST   1.25  // 1.0 minimal lighting boost for dark areas ~ 3.0 brighter dark areas
+#define NL_SHADOW_INTENSITY     0.82  // defined shadows without crushing detail
+#define NL_MIN_LIGHTING_BOOST   1.12  // preserve contrast in shaded areas
 //#define NL_BLINKING_TORCH  // [toggle] flickering light
 //#define NL_CLOUD_SHADOW      // keep vanilla cloud lighting; disable shader cloud-shadow pass
 
@@ -49,8 +49,8 @@
 #define NL_END_AMBIENT    vec3(1.98,1.25,2.3)
 
 /* Sun/moon light color */
-#define NL_DAWN_SUNLIGHT_COL   vec3(1.0,0.4,0.1)
-#define NL_NOON_SUNLIGHT_COL   vec3(1.0,0.75,0.57)
+#define NL_DAWN_SUNLIGHT_COL   vec3(1.0,0.48,0.24)
+#define NL_NOON_SUNLIGHT_COL   vec3(1.0,0.84,0.70)
 #define NL_NIGHT_MOONLIGHT_COL vec3(0.01,0.03,0.2)
 
 /* Torch colors */
@@ -75,8 +75,8 @@
 #define NL_DAWN_HORIZON_COL  vec3(1.25,0.48,0.32)
 #define NL_DAWN_EDGE_COL     vec3(1.25,0.72,0.52)
 #define NL_DAY_ZENITH_COL    vec3(0.28,0.52,0.82)
-#define NL_DAY_HORIZON_COL   vec3(0.78,0.86,0.94)
-#define NL_DAY_EDGE_COL      vec3(0.92,0.88,0.80)
+#define NL_DAY_HORIZON_COL   vec3(0.82,0.88,0.94)
+#define NL_DAY_EDGE_COL      vec3(0.98,0.91,0.80)
 #define NL_NIGHT_ZENITH_COL  vec3(0.008,0.048,0.08)
 #define NL_NIGHT_HORIZON_COL vec3(0.02,0.06,0.1)
 #define NL_NIGHT_EDGE_COL    vec3(0.04,0.08,0.1)
@@ -106,13 +106,13 @@
 #define NL_WAVE_RANGE 13.0     // 6.0 upto 6 blocks ~ 32.0 upto 32 blocks away (slower)
 
 /* Water */
-#define NL_WATER_TRANSPARENCY 0.86 // slightly clearer water while retaining vanilla depth
-#define NL_WATER_BUMP 0.18        // pronounced natural wave normals
-#define NL_WATER_WAVE_SPEED  1.15 // visible motion without turbulent distortion
-#define NL_WATER_TEX_OPACITY 0.12 // reduce vanilla texture noise for a cleaner surface
+#define NL_WATER_TRANSPARENCY 0.78 // clearer water; avoid opaque blue surface
+#define NL_WATER_BUMP 0.14        // broad, gentle surface movement
+#define NL_WATER_WAVE_SPEED  0.82 // slower, calmer natural wave motion
+#define NL_WATER_TEX_OPACITY 0.06 // minimize distracting vanilla surface texture
 #define NL_WATER_WAVE             // [toggle] animated wave effect
 //#define NL_WATER_REFL_MASK      // keep directional sky reflection; no fake reflection mask
-#define NL_WATER_TINT vec3(0.38,0.62,0.72)
+#define NL_WATER_TINT vec3(0.55,0.78,0.88) // bright, clear aqua tint
 
 /* Underwater */
 #define NL_UNDERWATER_BRIGHTNESS 0.8         // 0.0 dark ~ 3.0 bright
