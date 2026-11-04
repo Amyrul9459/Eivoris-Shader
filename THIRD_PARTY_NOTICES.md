@@ -1,19 +1,13 @@
 # Third-party notices
 
-## Legacy build dependency
+## EIVORIS-authored shader code
 
-The current legacy GitHub Actions workflow fetches Newb X Legacy:
-https://github.com/devendrn/newb-x-mcbe
+The active RenderChunk vertex/fragment programs and the water and lighting functions in src/materials/RenderChunk and src/eivoris are authored for EIVORIS.
 
-That workflow uses the upstream project as a material/compiler template. Consequently, artifacts produced by that workflow are not yet independent EIVORIS builds. This dependency is being removed as EIVORIS-owned material entry points and a standalone build pipeline are developed.
+## Build dependencies
 
-## Loader
+The GitHub Actions workflow checks out a pinned Newb X Legacy repository revision only to access its generic build wrapper, BGFX shader include, and the Lazurite/shaderc setup path. The workflow deletes the checkout's src/materials and src/newb shader-source directories before copying in EIVORIS-owned material sources. No Newb X shader source, water function, lighting function, macro set, or visual configuration is packaged.
 
-MaterialBinLoader2 (MTBinLoader2) is a separate Android loader project and is not bundled into this shader:
-https://github.com/mcbegamerxx954/mtbinloader2
+Newb X Legacy: https://github.com/devendrn/newb-x-mcbe
 
-MTBinLoader2 loads compiled material binaries. It does not provide shader source or replace the RenderDragon material/compiler pipeline.
-
-## Artistic references
-
-Bliss Shader and BSL Shader are used only as high-level visual references for water, atmosphere, and lighting direction. EIVORIS does not claim affiliation with these projects and does not intend to include their proprietary code or assets.
+MTBinLoader2 is the runtime material-bin loader and is separate from the shader implementation.
