@@ -106,13 +106,13 @@
 #define NL_WAVE_RANGE 13.0     // 6.0 upto 6 blocks ~ 32.0 upto 32 blocks away (slower)
 
 /* Water */
-#define NL_WATER_TRANSPARENCY 0.9 // 0.0 transparent ~ 1.0 normal
-#define NL_WATER_BUMP 0.12        // 0.001 plain ~ 0.2 bumpy water
-#define NL_WATER_WAVE_SPEED  0.9  // 0.2 calm ~ 2.0 turbulent
-#define NL_WATER_TEX_OPACITY 0.22  // 0.0 plain water ~ 1.0 vanilla water texture
-#define NL_WATER_WAVE             // [toggle] wave effect
-//#define NL_WATER_REFL_MASK      // [toggle] fake water reflection mask
-#define NL_WATER_TINT vec3(0.42,0.68,0.78)
+#define NL_WATER_TRANSPARENCY 0.86 // slightly clearer water while retaining vanilla depth
+#define NL_WATER_BUMP 0.18        // pronounced natural wave normals
+#define NL_WATER_WAVE_SPEED  1.15 // visible motion without turbulent distortion
+#define NL_WATER_TEX_OPACITY 0.12 // reduce vanilla texture noise for a cleaner surface
+#define NL_WATER_WAVE             // [toggle] animated wave effect
+//#define NL_WATER_REFL_MASK      // keep directional sky reflection; no fake reflection mask
+#define NL_WATER_TINT vec3(0.38,0.62,0.72)
 
 /* Underwater */
 #define NL_UNDERWATER_BRIGHTNESS 0.8         // 0.0 dark ~ 3.0 bright
