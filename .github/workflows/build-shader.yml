@@ -1,0 +1,54 @@
+name: Build EIVORIS Shader
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "src/eivoris/**"
+      - ".github/workflows/build-shader.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout EIVORIS
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fetch pinned RenderDragon shader source
+        run: |
+          git clone https://github.com/devendrn/newb-x-mcbe.git upstream
+          git -C upstream checkout 0d4c1536b21ee4a5152dc935fc84aa0aedaec8e6
+
+      - name: Apply EIVORIS configuration
+        run: |
+          cp src/eivoris/config.h upstream/src/newb/config.h
+          cp src/eivoris/pack_config.toml upstream/src/newb/pack_config.toml
+
+      - name: Install build dependencies
+        working-directory: upstream
+        run: python -m pip install -r requirements.txt
+
+      - name: Prepare shader compiler and material data
+        working-directory: upstream
+        run: ./build.sh setup
+
+      - name: Compile EIVORIS Android shader pack
+        working-directory: upstream
+        run: ./build.sh pack -p android -v 1
+
+      - name: Upload EIVORIS mcpack
+        uses: actions/upload-artifact@v4
+        with:
+          name: EIVORIS-Shader-Android
+          path: upstream/build/**/*.mcpack
+          if-no-files-found: error
+          retention-days: 30
