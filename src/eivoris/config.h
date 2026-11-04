@@ -87,7 +87,7 @@
 #define NL_RAINBOW_CLEAR 0.0
 #define NL_RAINBOW_RAIN 0.4
 /* EIVORIS custom bloom disabled; retain no glow pass. */
-#undef NL_GLOW_TEX
+#define NL_GLOW_TEX 0.0
 #undef NL_GLOW_SHIMMER
 #undef NL_GLOW_SHIMMER_SPEED
 #define NL_PLANTS_WAVE 0.05
