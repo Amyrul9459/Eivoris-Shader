@@ -49,7 +49,7 @@ jobs:
 
       - name: Compile EIVORIS RenderChunk material
         working-directory: toolchain
-        run: ./build.sh pack -p android -v 0
+        run: ./build.sh pack -p android
 
       - name: Validate and name MTBinLoader2 package
         working-directory: toolchain
@@ -86,7 +86,7 @@ jobs:
           ).encode("utf-8")
 
           final_path = Path("build/eivoris-shader.mcpack")
-          fd, tmp = tempfile.mkstemp(suffix=".mcpack")
+          fd, tmp = tempfile.mkstemp(suffix=".mcpack", dir="build")
           os.close(fd)
           try:
               with ZipFile(tmp, "w", ZIP_DEFLATED) as target:
