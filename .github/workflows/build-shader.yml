@@ -43,7 +43,9 @@ jobs:
         run: python src/eivoris/apply_newb_overrides.py
 
       - name: Expose Newb shader library to EIVORIS include path
-        run: cp -R toolchain/src/newb src/eivoris/newb
+        run: |
+          mkdir -p toolchain/src/eivoris
+          cp -R toolchain/src/newb toolchain/src/eivoris/newb
 
       - name: Install compiler dependencies
         working-directory: toolchain
