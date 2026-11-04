@@ -3,27 +3,30 @@ version = [0, 1, 0]
 min_supported_mc_version = [1, 26, 60]
 description = '''
 §r§l§5EIVORIS SHADER§r
-§7Independent water and world lighting.
-§8Dense ripples • Natural illumination
+§7A new perspective on your world.
+§8Cinematic atmosphere • Natural light • Living water
 %v
 '''
-authors = ["EIVORIS"]
+authors = ["EIVORIS Team"]
 url = "https://github.com/Amyrul9459/Eivoris-Shader"
 uuid = "7e6d2f41-8b93-4e0f-a7c1-5d92e4b60f31"
-materials = ["RenderChunk"]
+materials = ["Actor", "ActorGlint", "ActorMultiTexture", "Clouds", "EndSky", "ItemInHandColor", "ItemInHandColorGlint", "ItemInHandTextured", "RenderChunk", "Sky", "Stars", "SunMoon", "Weather"]
 
 [info]
 copyright = '''
-EIVORIS-authored RenderChunk material shaders, water field, and lighting model.
-MTBinLoader2 is the runtime material-bin loader.
+EIVORIS Shader configuration and project integration.
+The RenderDragon shader source used for compilation is based on Newb X Legacy
+(https://github.com/devendrn/newb-x-mcbe), whose source code is licensed under MIT.
+Newb X Legacy and its contributors are credited as upstream technical references.
 '''
 credits = '''
-Independent EIVORIS water and world-lighting implementation.
+EIVORIS visual configuration and integration by EIVORIS Team.
+Upstream shader framework: Newb X Legacy by devendrn and contributors.
 '''
 
 [[subpack]]
 define = "DEFAULT"
 materials = []
 description = '''
-EIVORIS Shader — dense water ripples and natural world lighting.
+EIVORIS Cinematic — natural lighting, atmospheric sky and animated water.
 '''

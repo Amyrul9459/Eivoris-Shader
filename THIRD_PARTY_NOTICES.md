@@ -1,19 +1,19 @@
 # Third-party notices
 
-## EIVORIS-authored shader code
+## Legacy build dependency
 
-The RenderChunk vertex/fragment programs and the water and lighting functions in `src/materials/RenderChunk` and `src/eivoris` are authored for EIVORIS.
+The current legacy GitHub Actions workflow fetches Newb X Legacy:
+https://github.com/devendrn/newb-x-mcbe
 
-## FirmamentCraft
+That workflow uses the upstream project as a material/compiler template. Consequently, artifacts produced by that workflow are not yet independent EIVORIS builds. This dependency is being removed as EIVORIS-owned material entry points and a standalone build pipeline are developed.
 
-FirmamentCraft Shader by ChuYinxiao is used as a feature-level and visual reference only. Its public CurseForge project lists its license as **All Rights Reserved**. No FirmamentCraft source code, compiled material binaries, textures, or other assets are copied or redistributed by this repository.
+## Loader
 
-Project page: https://www.curseforge.com/minecraft-bedrock/texture-packs/firmamentcraft-shader-renderdragon
+MaterialBinLoader2 (MTBinLoader2) is a separate Android loader project and is not bundled into this shader:
+https://github.com/mcbegamerxx954/mtbinloader2
 
-## Build dependencies
+MTBinLoader2 loads compiled material binaries. It does not provide shader source or replace the RenderDragon material/compiler pipeline.
 
-The GitHub Actions workflow checks out a pinned Newb X Legacy repository revision only to access its generic build wrapper, BGFX shader include, and Lazurite/shaderc setup path. The workflow deletes the checkout's `src/materials` and `src/newb` shader-source directories before copying in EIVORIS-owned material sources. No Newb X shader source, water function, lighting function, macro set, or visual configuration is packaged.
+## Artistic references
 
-Newb X Legacy build environment: https://github.com/devendrn/newb-x-mcbe
-
-MTBinLoader2 is the runtime material-bin loader and is separate from the shader implementation.
+Bliss Shader and BSL Shader are used only as high-level visual references for water, atmosphere, and lighting direction. EIVORIS does not claim affiliation with these projects and does not intend to include their proprietary code or assets.

@@ -1,49 +1,98 @@
-# EIVORIS Shader
+<div align="center">
 
-**Independent RenderDragon shader for Minecraft Bedrock 1.26.60.4**
+# ✦ E I V O R I S ✦
+### R E N D E R D R A G O N   S H A D E R
 
-EIVORIS uses the proven Newb X RenderChunk pipeline as its technical base, with EIVORIS-authored water and lighting overrides. The goal is expressive, visibly moving water and natural cinematic world lighting without pretending that RenderChunk alone provides ray tracing or full screen-space global illumination.
+<p>
+  <img src="https://img.shields.io/badge/MINECRAFT-BEDROCK-35B56A?style=for-the-badge&logo=minecraft&logoColor=white" alt="Minecraft Bedrock">
+  <img src="https://img.shields.io/badge/RENDER-DRAGON-7C5CFC?style=for-the-badge" alt="RenderDragon">
+  <img src="https://img.shields.io/badge/STATUS-REBUILDING-F0A43A?style=for-the-badge" alt="Rebuilding">
+</p>
 
-## Current implementation
+**A new perspective on your world.**
 
-### Water
-- Four travelling wave directions with different wavelengths and speeds.
-- Matching procedural gradient normals for close-range wave detail.
-- Vertex displacement on the existing Minecraft water mesh.
-- Fresnel reflection and procedural sky/sun response.
-- Blue/teal water tint with tuned transparency and specular response.
-- Cloud and aurora reflections disabled.
+*Atmosphere · Light · Depth · Immersion*
 
-### World lighting
-- Newb environment detection for day/night, rain, Nether, End and underwater.
-- Sun/moon lighting, sky ambient, torch contribution and lightmap integration.
-- Tuned shadow response and increased sky ambient contribution for softer, more natural illumination.
-- Existing Newb fog/sky pipeline retained instead of replacing it with a flat fog-color gradient.
+</div>
 
-### Underwater
-- Retains Newb underwater lighting and caustics, with EIVORIS tuning for brightness and caustic intensity.
-- Full-screen depth absorption and volumetric scattering are not claimed: those require additional pipeline inputs/passes.
+---
 
-## Source layout
+## 🌌 Project Direction
 
-- `src/materials/RenderChunk/` — Newb-compatible RenderChunk vertex/fragment/varying interface.
-- `src/eivoris/newb_overrides/water.h` — EIVORIS multi-directional water implementation.
-- `src/eivoris/apply_newb_overrides.py` — reproducibly applies EIVORIS water and lighting settings to the pinned Newb build tree.
-- `src/eivoris/pack_config.toml` — EIVORIS package metadata.
+EIVORIS is being rebuilt as an independently authored RenderDragon shader for Minecraft Bedrock. Its visual direction takes broad artistic inspiration from the lush water and atmosphere associated with Bliss Shader and the cinematic daylight associated with BSL Shader. Those projects are visual references only: EIVORIS does not intend to copy their source code, assets, or parameter sets.
 
-The build pins the Newb X repository to a specific commit. Newb X source is MIT-licensed; its copyright/license notices are retained in the build source. EIVORIS does not use proprietary FirmamentCraft or Bliss source/assets.
+The goal is to develop EIVORIS-owned rendering modules for water, lighting, rain, reflections, and image effects, then connect them to EIVORIS-owned RenderDragon material entry points.
 
-## Known technical limits
+> **One world. A different perspective.**
 
-- Water displacement can only move vertices already present in Minecraft's water mesh. It cannot add subdivisions, so the visible silhouette wave is constrained by mesh density. The moving normal field provides additional detail close to the player.
-- Reflections are procedural sky/sun reflections, not screen-space reflections of terrain or ray tracing.
-- Shadowing remains constrained by the RenderChunk/lightmap data available in this pipeline.
-- A successful shader compiler build confirms material compilation and package creation, not final in-game visual quality.
+## 🧩 EIVORIS Modules
 
-## Build and test
+| Module | Responsibility | Status |
+|:--|:--|:--|
+| 🌊 Water | Multi-scale displacement, analytic normals, water tint and Fresnel | Source module drafted |
+| ☀️ Lighting | Direct sun, sky fill, block light and ambient response | Source module drafted |
+| 🌧️ Rain | Surface wetness, roughness and rain haze | Source module drafted |
+| 🪞 Reflection | Fresnel and environment reflection response | Source module drafted |
+| ✨ Effects | Tone mapping, color grading and atmospheric fog | Source module drafted |
+| 🌤️ Sky | Sky dome, sun/moon and atmospheric scattering | Not started |
+| 🌑 Shadows / AO | Contact shading and shadow integration | Not started |
 
-GitHub Actions compiles the Android material package for MTBinLoader2 and names it `eivoris-shader.mcpack`.
+The current modules are located in `src/eivoris/modules/`. They are EIVORIS-authored GLSL-style source, but are not yet connected to the Minecraft material pipeline.
 
-[Build workflow](https://github.com/Amyrul9459/Eivoris-Shader/actions)
+## ⚠️ Build Status — Read This
 
-**Target:** Minecraft Bedrock 1.26.60.4 + MTBinLoader2. Device testing is still required to judge the final water motion, lighting balance and performance.
+The existing GitHub Actions workflow still fetches Newb X Legacy as its material/compiler template. This is a legacy build path and means the current .mcpack is **not yet independent**, even though the new EIVORIS module sources do not depend on Newb functions.
+
+The next milestone is to author EIVORIS-owned material entry points (starting with RenderChunk, Sky and Weather), then replace the legacy workflow. The BGFX shader compiler may be retained as a compiler toolchain; it is not the same thing as retaining Newb's shader implementation.
+
+MTBinLoader2 remains the intended Android loader. It loads compiled material binaries; it does not provide shader source, engine material interfaces, or a compiler.
+
+## 🎨 Visual Direction
+
+- **Water — Bliss-inspired:** broad, smooth, layered movement, natural color depth and restrained sky reflections.
+- **Lighting — BSL-inspired:** warm direct daylight, balanced ambient fill, soft visual contrast and atmospheric depth.
+- **Rain:** wet material response, subtle haze and weather-aware lighting.
+- **Reflections:** physically motivated Fresnel response using environment information available to the material.
+- **Effects:** controlled tone mapping, color separation and distance atmosphere.
+
+These are design targets, not claims of completed in-game effects.
+
+## 📱 Compatibility Target
+
+| Component | Target |
+|:--|:--|
+| Edition | Minecraft Bedrock |
+| Renderer | RenderDragon |
+| Minecraft version | **1.26.60.4** |
+| Loader | MTBinLoader2 |
+| Platform | Android |
+
+Compatibility and performance must be verified on the exact Minecraft build and device before a release is called stable.
+
+## 🧭 Roadmap
+
+- [x] Repository foundation and MTBinLoader2 packaging research
+- [x] Initial EIVORIS module source drafts
+- [ ] EIVORIS-owned RenderChunk material
+- [ ] EIVORIS-owned Sky material
+- [ ] EIVORIS-owned Weather material
+- [ ] Standalone BGFX build workflow (no Newb source fetch)
+- [ ] Compile and validate material-bin output
+- [ ] In-game water, lighting and rain tuning
+- [ ] Android performance and compatibility testing
+
+## 📦 Builds
+
+Existing GitHub Actions artifacts are legacy experimental builds. They still use the Newb X Legacy material template and must not be described as an independent EIVORIS release. A new independent .mcpack will only be published after the standalone material pipeline compiles and passes validation.
+
+---
+
+<div align="center">
+
+### ✦ E I V O R I S ✦
+
+**Crafted for atmosphere. Built for immersion.**
+
+<sub>Independent shader implementation in development · 2026</sub>
+
+</div>
