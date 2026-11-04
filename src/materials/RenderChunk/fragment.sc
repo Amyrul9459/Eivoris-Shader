@@ -55,7 +55,8 @@ void main() {
     if (!gl_FrontFacing) geometricNormal = -geometricNormal;
 
     vec3 albedo = texel.rgb * v_color0.rgb;
-    float materialAO = clamp(dot(v_color0.rgb, vec3(0.3333)), 0.0, 1.0);
+    // Preserve engine vertex shading/tint directly; do not mistake albedo tint for AO.
+    float materialAO = 1.0;
     vec3 sunDirection = normalize(SunDirection.xyz);
     vec3 sunColor = mix(vec3(1.0, 0.54, 0.32), vec3(1.0, 0.91, 0.78), daylight);
     vec3 litColor = eivorisWorldLighting(albedo, geometricNormal, lightmap, sunDirection, sunColor, daylight, materialAO);
