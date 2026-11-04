@@ -1,38 +1,44 @@
 # EIVORIS Shader
 
-**Independent RenderDragon material shader for Minecraft Bedrock 1.26.60+**
+**Independent RenderDragon material shader for Minecraft Bedrock 1.26.60.4**
 
-EIVORIS is being built around two active systems only:
+EIVORIS is an independently authored shader project. Its current visual direction takes feature-level inspiration from FirmamentCraft's RenderDragon work: expressive water, sky response, surface highlights, and atmospheric material rendering. No FirmamentCraft source code, compiled materials, textures, or assets are copied into this repository.
 
-- **Water:** dense, multi-directional micro-ripples with restrained amplitude. The water mesh is not vertically displaced, so waves do not rise through block boundaries. Close-range detail is carried by a time-varying normal field.
-- **World lighting:** EIVORIS-authored direct/ambient response using Minecraft's material inputs and lightmap, with natural warm sunlight and preserved shadow contrast.
+## Current rendering systems
+
+- **Water surface:** multi-directional animated wave field, low-amplitude vertex displacement, matching analytic normals, Fresnel response, and procedural sky/sun highlights.
+- **World lighting:** engine lightmap integration, hemispherical ambient response, warm/cool daylight transition, and a Cook-Torrance-style GGX specular term.
+- **Atmosphere:** engine fog is preserved. Synthetic cloud reflections are intentionally excluded.
 
 ## Architecture
 
-The active renderer is authored in this repository:
+EIVORIS-owned shader implementation:
 
-- src/materials/RenderChunk/vertex.sc
-- src/materials/RenderChunk/fragment.sc
-- src/eivoris/eivoris_water.sh
-- src/eivoris/eivoris_lighting.sh
+- `src/materials/RenderChunk/vertex.sc`
+- `src/materials/RenderChunk/fragment.sc`
+- `src/eivoris/eivoris_water.sh`
+- `src/eivoris/eivoris_lighting.sh`
 
-The build workflow compiles the EIVORIS RenderChunk material. It does **not** copy Newb X shader source, functions, macros, or configuration into the pack.
+The build workflow uses a pinned external checkout only as a generic Lazurite/shaderc + BGFX build environment and for vanilla material metadata. Its shader source directories are removed before EIVORIS sources are compiled. This is build infrastructure, not the EIVORIS rendering approach.
 
-The pinned external checkout is used only for the generic Lazurite/shaderc build wrapper, BGFX shader include, and vanilla material metadata needed to compile the RenderDragon material-bin. MTBinLoader2 remains the runtime material-bin loader; it is not a shader framework.
+## Important technical limits
 
-## Current implementation limits
-
-- Water motion is normal-based, not vertex displacement. This is intentional to keep the water surface inside the Minecraft block boundary.
-- Reflection is a procedural sky/sun response, not screen-space reflection.
-- Lighting uses the engine lightmap and EIVORIS direct/ambient shading. This pass does not yet implement a custom shadow-map renderer.
-- A successful compile validates shader/material packaging, not the visual result on a device. In-game testing with Minecraft + MTBinLoader2 is still required.
+- RenderChunk can displace only vertices already present in Minecraft's water mesh. It cannot create additional mesh subdivisions; large, smooth wave silhouettes are therefore limited by the engine mesh density.
+- Sky/sun response is procedural. This is not screen-space reflection or ray-traced reflection of the surrounding terrain.
+- The current lighting pass does not own a shadow-map renderer or a full global-illumination solution.
+- Underwater full-screen scattering and depth-based absorption are not yet implemented; those require reliable scene-depth/pipeline inputs beyond the current RenderChunk pass.
+- A successful shaderc build confirms material compilation and packaging, not the final visual result. Device testing with Minecraft 1.26.60.4 and MTBinLoader2 is required.
 
 ## Build
 
-GitHub Actions builds the Android artifact as eivoris-shader.mcpack.
+GitHub Actions targets Android and packages the output as `eivoris-shader.mcpack`.
 
 [Open build workflow](https://github.com/Amyrul9459/Eivoris-Shader/actions)
 
-## Scope
+## Reference and licensing
 
-Development is intentionally limited to **water and world lighting** until both meet the visual target. Other shader effects are out of scope for now.
+FirmamentCraft is a visual/feature reference only. Its CurseForge project lists the license as **All Rights Reserved**; EIVORIS does not redistribute or adapt its proprietary code or assets.
+
+[ FirmamentCraft Shader — CurseForge ](https://www.curseforge.com/minecraft-bedrock/texture-packs/firmamentcraft-shader-renderdragon)
+
+EIVORIS development remains focused on water and world lighting until these systems are validated in-game.
