@@ -30,7 +30,7 @@ void main() {
     float daylight = clamp(0.5 + 0.5 * sin((dayPhase - 0.25) * 6.2831853), 0.0, 1.0);
 
     if (v_data.x > 0.5) {
-        float time = ViewPositionAndTime.w;
+        float time = v_data.w;
         vec3 normal = eivorisWaterNormal(v_worldPos.xz, time);
         float ndv = max(dot(normal, viewDir), 0.0);
         float fresnel = eivorisWaterFresnel(ndv);
@@ -38,15 +38,18 @@ void main() {
         vec3 skyReflection = eivorisWaterSky(reflected, FogColor.rgb, daylight);
 
         vec3 sunDir = normalize(SunDirection.xyz);
-        float sunGlint = pow(max(dot(reflected, sunDir), 0.0), 96.0);
-        sunGlint += 0.35 * pow(max(dot(reflected, sunDir), 0.0), 24.0);
-        vec3 sunColor = mix(vec3(1.0, 0.52, 0.27), vec3(1.0, 0.91, 0.76), daylight);
-        skyReflection += sunColor * sunGlint * (0.35 + 0.65 * daylight);
+        float sunAlignment = max(dot(reflected, sunDir), 0.0);
+        float sunGlint = pow(sunAlignment, 112.0) + 0.30 * pow(sunAlignment, 28.0);
+        vec3 sunColor = mix(vec3(1.0, 0.48, 0.27), vec3(1.0, 0.91, 0.76), daylight);
+        skyReflection += sunColor * sunGlint * (0.42 + 0.58 * daylight);
 
-        vec3 deepWater = mix(vec3(0.012, 0.105, 0.135), vec3(0.018, 0.20, 0.24), clamp(lightmap.g, 0.0, 1.0));
-        vec3 waterColor = mix(deepWater, skyReflection, fresnel * 0.82);
-        waterColor += sunColor * (0.025 + 0.07 * sunGlint);
-        float alpha = clamp(texel.a * v_color0.a + 0.12, 0.28, 0.92);
+        // Shallow/deep tint is driven by available engine lightmap, not fake
+        // screen-space depth. No cloud reflection is synthesized.
+        float skyLight = clamp(lightmap.g, 0.0, 1.0);
+        vec3 deepTint = mix(vec3(0.006, 0.045, 0.075), vec3(0.012, 0.14, 0.19), skyLight);
+        vec3 waterColor = mix(deepTint, skyReflection, clamp(fresnel * 0.92, 0.0, 1.0));
+        waterColor += sunColor * (0.018 + 0.055 * sunGlint);
+        float alpha = clamp(texel.a * v_color0.a + 0.10, 0.30, 0.94);
         gl_FragColor = vec4(waterColor, alpha);
         return;
     }
@@ -55,13 +58,14 @@ void main() {
     if (!gl_FrontFacing) geometricNormal = -geometricNormal;
 
     vec3 albedo = texel.rgb * v_color0.rgb;
-    // Preserve engine vertex shading/tint directly; do not mistake albedo tint for AO.
-    float materialAO = 1.0;
     vec3 sunDirection = normalize(SunDirection.xyz);
-    vec3 sunColor = mix(vec3(1.0, 0.54, 0.32), vec3(1.0, 0.91, 0.78), daylight);
-    vec3 litColor = eivorisWorldLighting(albedo, geometricNormal, lightmap, sunDirection, sunColor, daylight, materialAO);
+    vec3 sunColor = mix(vec3(1.0, 0.52, 0.32), vec3(1.0, 0.91, 0.78), daylight);
+    vec3 litColor = eivorisWorldLighting(
+        albedo, geometricNormal, viewDir, lightmap,
+        sunDirection, sunColor, daylight, 1.0
+    );
 
-    // Natural distance fog from the engine's fog color; no synthetic cloud reflection.
+    // Preserve engine fog behavior and avoid artificial cloud reflections.
     litColor = mix(litColor, FogColor.rgb, clamp(v_fog.a, 0.0, 1.0));
     gl_FragColor = vec4(litColor, texel.a * v_color0.a);
 }
