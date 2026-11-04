@@ -60,6 +60,7 @@ vec4 nlRefl(
         // Slightly perturb the reflected direction with fine rain ripples.
         // The impact rings are world-anchored, so they do not swim with UVs.
         float impact = eivorisRainImpact((wPos + CAMERA_POS).xz, t);
+        color.rgb += vec3(0.20, 0.32, 0.38) * impact * env.rainFactor * 0.10;
         vec2 rippleDir = normalize((wPos + CAMERA_POS).xz + vec2(0.001));
         viewDir.xz += rippleDir * impact * 0.018 * env.rainFactor;
         viewDir = normalize(viewDir);
