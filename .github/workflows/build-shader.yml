@@ -45,7 +45,7 @@ jobs:
 
           path = Path("src/newb/functions/lighting.h")
           source = path.read_text()
-          pattern = r"void nlUnderwaterLighting\\(.*?\\n}\\n(?=\\nvec3 nlEntityLighting)"
+          pattern = r"void nlUnderwaterLighting\(.*?\n}\n(?=\nvec3 nlEntityLighting)"
           replacement = """void nlUnderwaterLighting(inout vec3 light, inout vec3 pos, vec2 lit, vec2 uv1, vec3 tiledCpos, vec3 cPos, highp float t, vec3 horizonCol) {
             float depthMask = 1.0 - smoothstep(0.72, 0.98, uv1.y);
             if (uv1.y < 0.9) {
