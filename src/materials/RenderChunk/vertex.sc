@@ -5,6 +5,7 @@ $input a_color0, a_position, a_texcoord0, a_texcoord1
 $output v_color0, v_fog, v_texcoord0, v_lightmapUV, v_worldPos, v_data
 
 #include <bgfx_shader.sh>
+#include "eivoris_water.sh"
 
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 FogAndDistanceControl;
@@ -21,10 +22,6 @@ void main() {
     #endif
 
     vec3 worldPos = mul(model, vec4(a_position, 1.0)).xyz;
-    vec3 cameraRelative = ViewPositionAndTime.xyz - worldPos;
-    float distanceToCamera = length(cameraRelative);
-    float safeDistance = max(distanceToCamera, 0.0001);
-
     vec2 uv = 2.0 * a_texcoord0.xy;
     uv = fract(uv) + ((floor(uv) - 0.5) / 16384.0);
 
@@ -37,7 +34,17 @@ void main() {
         if (a_color0.b > 0.3 && a_color0.a < 0.95) waterMask = 1.0;
     #endif
 
+    // Displace water vertices in world space. The low amplitude is deliberate:
+    // it creates a moving silhouette without violently breaking block edges.
+    if (waterMask > 0.5) {
+        absoluteWorldPos.y += eivorisWaterHeight(absoluteWorldPos.xz, ViewPositionAndTime.w);
+        worldPos.y = absoluteWorldPos.y - CameraPosition.y;
+    }
+
+    vec3 cameraRelative = ViewPositionAndTime.xyz - worldPos;
+    float distanceToCamera = length(cameraRelative);
     vec4 clipPos = mul(u_viewProj, vec4(worldPos, 1.0));
+
     float fogDistance = max(FogAndDistanceControl.z, 1.0);
     float fogFactor = clamp(distanceToCamera / fogDistance, 0.0, 1.0);
     fogFactor = smoothstep(FogAndDistanceControl.x, FogAndDistanceControl.y, fogFactor);
