@@ -34,7 +34,7 @@ jobs:
           mkdir -p toolchain/src
           cp -R src/materials toolchain/src/materials
           mkdir -p toolchain/src/newb
-          cp src/newb/pack_config.toml toolchain/src/newb/pack_config.toml
+          cp src/eivoris/pack_config.toml toolchain/src/newb/pack_config.toml
           cp -R src/eivoris toolchain/src/eivoris
           rm -rf toolchain/assets
           cp -R assets toolchain/assets
