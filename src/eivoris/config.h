@@ -86,10 +86,10 @@
 #define NL_RAINBOW
 #define NL_RAINBOW_CLEAR 0.0
 #define NL_RAINBOW_RAIN 0.4
-#define NL_GLOW_TEX 2.3
-#define NL_GLOW_SHIMMER 0.8
-#define NL_GLOW_SHIMMER_SPEED 0.9
-#define NL_GLOW_LEAK 0.22
+/* EIVORIS custom bloom disabled; retain no glow pass. */
+#undef NL_GLOW_TEX
+#undef NL_GLOW_SHIMMER
+#undef NL_GLOW_SHIMMER_SPEED
 #define NL_PLANTS_WAVE 0.05
 #define NL_LANTERN_WAVE 0.16
 #define NL_WAVE_SPEED 2.8
@@ -138,7 +138,8 @@
 #define NL_MOON_PATH_TILT -28.0
 #define NL_SUN_TILT 45.0
 #define NL_MOON_TILT 45.0
-#define NL_GODRAY 0.28
+/* God rays disabled: no custom volumetric fog pass. */
+#undef NL_GODRAY
 #define NL_GROUND_RAIN_WETNESS 1.0
 #define NL_GROUND_RAIN_PUDDLES 0.7
 #define NL_ENTITY_BRIGHTNESS 0.65
