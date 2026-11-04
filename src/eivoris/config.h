@@ -70,11 +70,11 @@
 #define NL_WATER_TINT vec3(0.55,0.78,0.88)
 
 /* Underwater */
-#define NL_UNDERWATER_BRIGHTNESS 0.8
-#define NL_CAUSTIC_INTENSITY 1.9
-#define NL_UNDERWATER_WAVE 0.1
+#define NL_UNDERWATER_BRIGHTNESS 0.95
+#define NL_CAUSTIC_INTENSITY 2.35
+#define NL_UNDERWATER_WAVE 0.14
 #define NL_UNDERWATER_STREAKS 1.0
-#define NL_UNDERWATER_TINT vec3(0.9,1.0,0.9)
+#define NL_UNDERWATER_TINT vec3(0.78,0.93,1.0)
 
 /* Keep vanilla cloud rendering while EIVORIS water is developed */
 #define NL_CLOUD_TYPE 0
