@@ -28,15 +28,13 @@ jobs:
           git clone https://github.com/devendrn/newb-x-mcbe.git upstream
           git -C upstream checkout 0d4c1536b21ee4a5152dc935fc84aa0aedaec8e6
 
-      - name: Apply EIVORIS configuration
+      - name: Apply EIVORIS configuration and rendering modules
         run: |
           cp src/eivoris/config.h upstream/src/newb/config.h
           cp src/eivoris/pack_config.toml upstream/src/newb/pack_config.toml
-
-      - name: Apply EIVORIS water implementation
-        run: |
           mkdir -p upstream/src/newb/functions
           cp src/eivoris/functions/water.h upstream/src/newb/functions/water.h
+          cp src/eivoris/functions/rain.h upstream/src/newb/functions/rain.h
 
       - name: Install build dependencies
         working-directory: upstream
@@ -77,11 +75,9 @@ jobs:
                       "No renderer/materials/*.material.bin payload found; "
                       "this pack cannot be validated for MTBinLoader2."
                   )
-
               manifest_name = "manifest.json"
               if manifest_name not in names:
                   raise SystemExit("manifest.json missing from shader pack")
-
               entries = {name: source.read(name) for name in names}
 
           manifest = json.loads(entries[manifest_name].decode("utf-8"))
