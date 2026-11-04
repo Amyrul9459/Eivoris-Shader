@@ -106,7 +106,9 @@ jobs:
           print(f"Validated {len(material_bins)} RenderDragon material-bin files:")
           for name in material_bins:
               print(f" - {name}")
-          print(f"MTBinLoader2-ready resource-pack container: {archive}")
+          final_name = Path("build") / "EIVORIS-Shader-1.1-Android.mcpack"
+          archive.rename(final_name)
+          print(f"MTBinLoader2-ready resource-pack container: {final_name}")
           PY
 
       - name: Upload EIVORIS MTBinLoader2 pack
