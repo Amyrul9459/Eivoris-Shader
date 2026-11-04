@@ -23,7 +23,7 @@
 
 ## 🌌 Overview
 
-**EIVORIS Shader** is an independent visual-shader project for Minecraft Bedrock Edition, focused on creating a richer, more immersive world through lighting, atmosphere, water, and environmental depth.
+**EIVORIS Shader** is an independent RenderDragon material-shader project for Minecraft Bedrock Edition. Its visual direction is inspired by the natural cinematic lighting, atmospheric depth, reflective surfaces, and rich material response associated with SEUS and Photon — adapted for Bedrock's RenderDragon pipeline, not copied from those projects.
 
 The goal is not simply to make the colors brighter. EIVORIS aims to reshape how the world feels — from the way sunlight reaches the landscape to the movement of water and the depth of distant horizons.
 
@@ -62,7 +62,8 @@ The goal is not simply to make the colors brighter. EIVORIS aims to reshape how 
 - [x] Initial animated water profile; in-game tuning still required
 - [ ] Sky and atmospheric rendering
 - [ ] Device compatibility and performance testing
-- [ ] Pack integration and release validation
+- [x] Android material-bin resource-pack pipeline for MTBinLoader2
+- [ ] In-game validation and visual tuning toward the SEUS / Photon direction
 
 ## 📱 Compatibility
 
@@ -73,7 +74,9 @@ The goal is not simply to make the colors brighter. EIVORIS aims to reshape how 
 | Target version | **1.26.60.4** |
 | Development status | In development |
 
-Compatibility is not guaranteed until a build has been tested in-game on the target version and device.
+Target loader: **MaterialBinLoader2 (MTBinLoader2)**. The Android build packages compiled RenderDragon material binaries under `renderer/materials/` inside an `.mcpack` container. The container is imported and enabled as a global resource pack; MTBinLoader2 hooks the corresponding `renderer/` assets from the active pack. This is not a standalone `.bin` file installer.
+
+MTBinLoader2 documents Android ARM64 and ARM32 support and includes a Minecraft 26.60 signature. Compatibility is still not guaranteed until tested in-game on the exact Minecraft build and device.
 
 ## 🧪 Development Principles
 
@@ -84,7 +87,7 @@ Compatibility is not guaranteed until a build has been tested in-game on the tar
 
 ## 📦 Releases
 
-There is no public shader release yet. When a tested build is available, it will be published through the repository's **Releases** section.
+The automated Android build is published as a GitHub Actions artifact named **EIVORIS-MTBinLoader2-Android**. It is an experimental test build, not a verified public release. Download the `.mcpack`, import it into Minecraft, enable it in Global Resources, and launch Minecraft through MTBinLoader2. Do not install it as a normal pack without the loader.
 
 ## ⚖️ Credits & References
 
