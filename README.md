@@ -55,11 +55,11 @@ The goal is not simply to make the colors brighter. EIVORIS aims to reshape how 
 
 > The items below describe the intended direction. They are not claims that these effects are already implemented.
 
-- [ ] Repository foundation and shader structure
-- [ ] RenderDragon pipeline and material research
-- [ ] Lighting and color response
+- [x] Repository foundation and EIVORIS shader configuration
+- [x] RenderDragon build pipeline and material research
+- [x] Initial cinematic lighting and color configuration
 - [ ] Shadow and ambient-occlusion work
-- [ ] Water surface movement and light response
+- [x] Initial animated water profile; in-game tuning still required
 - [ ] Sky and atmospheric rendering
 - [ ] Device compatibility and performance testing
 - [ ] Pack integration and release validation
