@@ -1,44 +1,49 @@
 # EIVORIS Shader
 
-**Independent RenderDragon material shader for Minecraft Bedrock 1.26.60.4**
+**Independent RenderDragon shader for Minecraft Bedrock 1.26.60.4**
 
-EIVORIS is an independently authored shader project. Its current visual direction takes feature-level inspiration from FirmamentCraft's RenderDragon work: expressive water, sky response, surface highlights, and atmospheric material rendering. No FirmamentCraft source code, compiled materials, textures, or assets are copied into this repository.
+EIVORIS uses the proven Newb X RenderChunk pipeline as its technical base, with EIVORIS-authored water and lighting overrides. The goal is expressive, visibly moving water and natural cinematic world lighting without pretending that RenderChunk alone provides ray tracing or full screen-space global illumination.
 
-## Current rendering systems
+## Current implementation
 
-- **Water surface:** multi-directional animated wave field, low-amplitude vertex displacement, matching analytic normals, Fresnel response, and procedural sky/sun highlights.
-- **World lighting:** engine lightmap integration, hemispherical ambient response, warm/cool daylight transition, and a Cook-Torrance-style GGX specular term.
-- **Atmosphere:** engine fog is preserved. Synthetic cloud reflections are intentionally excluded.
+### Water
+- Four travelling wave directions with different wavelengths and speeds.
+- Matching procedural gradient normals for close-range wave detail.
+- Vertex displacement on the existing Minecraft water mesh.
+- Fresnel reflection and procedural sky/sun response.
+- Blue/teal water tint with tuned transparency and specular response.
+- Cloud and aurora reflections disabled.
 
-## Architecture
+### World lighting
+- Newb environment detection for day/night, rain, Nether, End and underwater.
+- Sun/moon lighting, sky ambient, torch contribution and lightmap integration.
+- Tuned shadow response and increased sky ambient contribution for softer, more natural illumination.
+- Existing Newb fog/sky pipeline retained instead of replacing it with a flat fog-color gradient.
 
-EIVORIS-owned shader implementation:
+### Underwater
+- Retains Newb underwater lighting and caustics, with EIVORIS tuning for brightness and caustic intensity.
+- Full-screen depth absorption and volumetric scattering are not claimed: those require additional pipeline inputs/passes.
 
-- `src/materials/RenderChunk/vertex.sc`
-- `src/materials/RenderChunk/fragment.sc`
-- `src/eivoris/eivoris_water.sh`
-- `src/eivoris/eivoris_lighting.sh`
+## Source layout
 
-The build workflow uses a pinned external checkout only as a generic Lazurite/shaderc + BGFX build environment and for vanilla material metadata. Its shader source directories are removed before EIVORIS sources are compiled. This is build infrastructure, not the EIVORIS rendering approach.
+- `src/materials/RenderChunk/` — Newb-compatible RenderChunk vertex/fragment/varying interface.
+- `src/eivoris/newb_overrides/water.h` — EIVORIS multi-directional water implementation.
+- `src/eivoris/apply_newb_overrides.py` — reproducibly applies EIVORIS water and lighting settings to the pinned Newb build tree.
+- `src/eivoris/pack_config.toml` — EIVORIS package metadata.
 
-## Important technical limits
+The build pins the Newb X repository to a specific commit. Newb X source is MIT-licensed; its copyright/license notices are retained in the build source. EIVORIS does not use proprietary FirmamentCraft or Bliss source/assets.
 
-- RenderChunk can displace only vertices already present in Minecraft's water mesh. It cannot create additional mesh subdivisions; large, smooth wave silhouettes are therefore limited by the engine mesh density.
-- Sky/sun response is procedural. This is not screen-space reflection or ray-traced reflection of the surrounding terrain.
-- The current lighting pass does not own a shadow-map renderer or a full global-illumination solution.
-- Underwater full-screen scattering and depth-based absorption are not yet implemented; those require reliable scene-depth/pipeline inputs beyond the current RenderChunk pass.
-- A successful shaderc build confirms material compilation and packaging, not the final visual result. Device testing with Minecraft 1.26.60.4 and MTBinLoader2 is required.
+## Known technical limits
 
-## Build
+- Water displacement can only move vertices already present in Minecraft's water mesh. It cannot add subdivisions, so the visible silhouette wave is constrained by mesh density. The moving normal field provides additional detail close to the player.
+- Reflections are procedural sky/sun reflections, not screen-space reflections of terrain or ray tracing.
+- Shadowing remains constrained by the RenderChunk/lightmap data available in this pipeline.
+- A successful shader compiler build confirms material compilation and package creation, not final in-game visual quality.
 
-GitHub Actions targets Android and packages the output as `eivoris-shader.mcpack`.
+## Build and test
 
-[Open build workflow](https://github.com/Amyrul9459/Eivoris-Shader/actions)
+GitHub Actions compiles the Android material package for MTBinLoader2 and names it `eivoris-shader.mcpack`.
 
-## Reference and licensing
+[Build workflow](https://github.com/Amyrul9459/Eivoris-Shader/actions)
 
-FirmamentCraft is a visual/feature reference only. Its CurseForge project lists the license as **All Rights Reserved**; EIVORIS does not redistribute or adapt its proprietary code or assets.
-
-[ FirmamentCraft Shader — CurseForge ](https://www.curseforge.com/minecraft-bedrock/texture-packs/firmamentcraft-shader-renderdragon)
-
-EIVORIS development remains focused on water and world lighting until these systems are validated in-game.
+**Target:** Minecraft Bedrock 1.26.60.4 + MTBinLoader2. Device testing is still required to judge the final water motion, lighting balance and performance.
