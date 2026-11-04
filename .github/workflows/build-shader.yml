@@ -33,10 +33,12 @@ jobs:
           cp src/eivoris/config.h upstream/src/newb/config.h
           cp src/eivoris/pack_config.toml upstream/src/newb/pack_config.toml
 
-      - name: Apply EIVORIS water implementation
+      - name: Apply EIVORIS shader implementations
         run: |
           mkdir -p upstream/src/newb/functions
           cp src/eivoris/functions/water.h upstream/src/newb/functions/water.h
+          cp src/eivoris/functions/fog.h upstream/src/newb/functions/fog.h
+          cp src/eivoris/functions/glow.h upstream/src/newb/functions/glow.h
 
       - name: Install build dependencies
         working-directory: upstream
