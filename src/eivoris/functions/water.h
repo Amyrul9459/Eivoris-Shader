@@ -59,17 +59,17 @@ vec3 eivorisWaterWaveField(vec2 worldXZ, float time) {
   float s2 = sin(p2), c2 = cos(p2);
   float s3 = sin(p3), c3 = cos(p3);
 
-  field.x += 0.0720 * s0;
-  field.yz += 0.0720 * 1.85 * c0 * vec2(0.80, 0.60);
+  field.x += 0.0140 * s0;
+  field.yz += 0.0140 * 1.85 * c0 * vec2(0.80, 0.60);
 
-  field.x += 0.0520 * s1;
-  field.yz += 0.0520 * 2.95 * c1 * vec2(-0.48, 0.88);
+  field.x += 0.0090 * s1;
+  field.yz += 0.0090 * 2.95 * c1 * vec2(-0.48, 0.88);
 
-  field.x += 0.0340 * s2;
-  field.yz += 0.0340 * 4.35 * c2 * vec2(0.96, -0.28);
+  field.x += 0.0055 * s2;
+  field.yz += 0.0055 * 4.35 * c2 * vec2(0.96, -0.28);
 
-  field.x += 0.0200 * s3;
-  field.yz += 0.0200 * 6.10 * c3 * vec2(0.32, 0.95);
+  field.x += 0.0030 * s3;
+  field.yz += 0.0030 * 6.10 * c3 * vec2(0.32, 0.95);
 
   return field;
 }
@@ -81,8 +81,7 @@ vec2 eivorisWaterSlope(vec2 worldXZ, float time) {
   vec2 p1 = worldXZ * 1.65
           + vec2(-time * 0.19, time * 0.13);
   vec2 p2 = worldXZ * 3.25
-          + vec2(time * 0.34, time * 0.29);
-  
+          + vec2(time * 0.27, time * 0.21);
 
   vec3 n0 = eivorisNoiseGradient(p0);
   vec3 n1 = eivorisNoiseGradient(p1);
@@ -91,10 +90,10 @@ vec2 eivorisWaterSlope(vec2 worldXZ, float time) {
   vec2 g0 = n0.yz * vec2(0.75, 0.62);
   vec2 g1 = n1.yz * 1.65;
   vec2 g2 = n2.yz * 3.25;
-  vec2 noiseSlope = g0 * 0.105 + g1 * 0.060 + g2 * 0.030;
+  vec2 noiseSlope = g0 * 0.075 + g1 * 0.035 + g2 * 0.012;
 
   vec3 wave = eivorisWaterWaveField(worldXZ, time);
-  return wave.yz + noiseSlope;
+  return wave.yz * 1.35 + noiseSlope;
 }
 
 float eivorisWaterFresnel(float cosine, float f0) {
