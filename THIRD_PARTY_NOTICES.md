@@ -1,11 +1,19 @@
 # Third-party notices
 
-EIVORIS uses the Newb X Legacy RenderDragon shader source as its upstream build foundation:
+## Legacy build dependency
+
+The current legacy GitHub Actions workflow fetches Newb X Legacy:
 https://github.com/devendrn/newb-x-mcbe
 
-The upstream source code is licensed under the MIT License. Its source is fetched at a pinned commit by the GitHub Actions workflow and is not copied wholesale into this repository. The EIVORIS configuration and integration files in this repository are project-specific modifications.
+That workflow uses the upstream project as a material/compiler template. Consequently, artifacts produced by that workflow are not yet independent EIVORIS builds. This dependency is being removed as EIVORIS-owned material entry points and a standalone build pipeline are developed.
 
-MaterialBinLoader2 (MTBinLoader2) is a separate Android loader project and is not bundled into this shader. EIVORIS packages the compiled material binaries in an Android resource-pack container so MTBinLoader2 can intercept the active pack's `renderer/` assets. The loader's source is MIT-licensed:
+## Loader
+
+MaterialBinLoader2 (MTBinLoader2) is a separate Android loader project and is not bundled into this shader:
 https://github.com/mcbegamerxx954/mtbinloader2
 
-Visual references: SEUS and Photon are used only as high-level artistic references. EIVORIS does not include their proprietary shader code or assets.
+MTBinLoader2 loads compiled material binaries. It does not provide shader source or replace the RenderDragon material/compiler pipeline.
+
+## Artistic references
+
+Bliss Shader and BSL Shader are used only as high-level visual references for water, atmosphere, and lighting direction. EIVORIS does not claim affiliation with these projects and does not intend to include their proprietary code or assets.
