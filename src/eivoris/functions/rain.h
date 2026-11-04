@@ -18,6 +18,22 @@ float nlWindblow(vec3 pos, float t){
 // without adding geometry or depending on texture UVs.
 // Animated, world-anchored circular rain marks on block surfaces.
 // This is a surface shader effect, not an engine particle emitter.
+// Permanent irregular shallow-water pools anchored to world coordinates.
+float eivorisPuddleMask(vec2 worldXZ) {
+  vec2 cell = floor(worldXZ * 0.22);
+  vec2 local = fract(worldXZ * 0.22) - 0.5;
+  float seed = fastRand(cell);
+  vec2 center = (vec2(fract(seed * 13.17), fract(seed * 27.31)) - 0.5) * 0.52;
+  vec2 delta = local - center;
+  delta.x *= 0.82 + fract(seed * 7.13) * 0.55;
+  delta.y *= 0.82 + fract(seed * 9.71) * 0.55;
+  float radius = 0.19 + fract(seed * 19.73) * 0.17;
+  float edgeNoise = 0.025 * sin(local.x * 29.0 + seed * 17.0)
+                  * sin(local.y * 23.0 - seed * 11.0);
+  float dist = length(delta) + edgeNoise;
+  return 1.0 - smoothstep(radius - 0.045, radius + 0.045, dist);
+}
+
 float eivorisRainImpact(vec2 worldXZ, float t) {
   vec2 cell = floor(worldXZ * 0.82);
   vec2 local = fract(worldXZ * 0.82) - 0.5;
@@ -45,20 +61,21 @@ vec4 nlRefl(
 ) {
   vec4 wetRefl = vec4(0.0,0.0,0.0,0.0);
 
-  // Permanent subtle wet finish: independent of the current weather state.
-  float wetness = lit.y * lit.y;
+  // Permanent shallow puddles; the mask is world-anchored and never depends on rain.
+  float wetness = 0.38 + 0.62 * lit.y * lit.y;
   float endDist = renderDist * 0.6;
   if (camDist < endDist && wPos.y < 0.0) {
+    vec2 worldXZ = (wPos + CAMERA_POS).xz;
+    float puddleMask = eivorisPuddleMask(worldXZ);
     float cosR = max(viewDir.y, 0.0);
-    float puddles = max(1.0 - NL_GROUND_RAIN_PUDDLES * fastRand(tiledCpos.xz), 0.0);
-    float reflective = wetness * puddles * 0.22;
+    float reflective = wetness * (0.035 + puddleMask * 0.78);
 
-    // Rain circles animate only while raining, while the wet material stays permanent.
-    float impact = eivorisRainImpact((wPos + CAMERA_POS).xz, t) * env.rainFactor;
+    // Animated concentric rings appear over puddles during rainfall only.
+    float impact = eivorisRainImpact(worldXZ, t) * env.rainFactor * puddleMask;
     if (impact > 0.001) {
-      color.rgb += vec3(0.24, 0.34, 0.39) * impact * 0.22;
-      vec2 rippleDir = normalize((wPos + CAMERA_POS).xz + vec2(0.001));
-      viewDir.xz += rippleDir * impact * 0.014;
+      color.rgb += vec3(0.24, 0.34, 0.39) * impact * 0.20;
+      vec2 rippleDir = normalize(worldXZ + vec2(0.001));
+      viewDir.xz += rippleDir * impact * 0.012;
       viewDir = normalize(viewDir);
     }
 
@@ -77,10 +94,13 @@ vec4 nlRefl(
     wetRefl.a = calculateFresnel(cosR, 0.03) * reflective;
     wetRefl.a *= clamp(2.0 - 2.0 * camDist / endDist, 0.0, 1.0);
     wetRefl.a *= 1.0 + impact * 0.18;
+
+    // Pools are visibly darker and glossier than the surrounding block.
+    color.rgb *= 1.0 - puddleMask * 0.20;
   }
 
-  // Slight permanent darkening gives stone, soil and other blocks a damp finish.
-  color.rgb *= 1.0 - 0.13 * wetness;
+  // A restrained permanent damp tint remains outside the puddle patches.
+  color.rgb *= 1.0 - 0.035 * wetness;
   return wetRefl;
 }
 
