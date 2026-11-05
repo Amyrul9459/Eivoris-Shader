@@ -47,22 +47,24 @@ jobs:
           source = path.read_text()
           pattern = r"void nlUnderwaterLighting\(.*?\n}\n(?=\nvec3 nlEntityLighting)"
           replacement = """void nlUnderwaterLighting(inout vec3 light, inout vec3 pos, vec2 lit, vec2 uv1, vec3 tiledCpos, vec3 cPos, highp float t, vec3 horizonCol) {
-            // uv1.y is the sky-lightmap channel, not camera depth. Use it only
-            // to modulate caustic visibility; do not treat it as a depth buffer.
-            float skyVisibility = clamp(uv1.y, 0.0, 1.0);
-            float c0 = disp(tiledCpos, NL_WATER_WAVE_SPEED*t);
-            float c1 = disp(tiledCpos*2.13 + vec3(0.37, 0.0, 0.61), NL_WATER_WAVE_SPEED*t*0.73);
-            float caustics = 0.68*c0*c0 + 0.32*c1*c1;
-            caustics *= mix(0.72, 1.0, skyVisibility);
-            float causticMask = smoothstep(0.08, 0.95, lit.y + lit.x*0.45);
-            light += NL_UNDERWATER_BRIGHTNESS
-                   + NL_CAUSTIC_INTENSITY*caustics*causticMask*(0.12 + lit.y + lit.x*0.7);
+            // Keep the engine's underwater lightmap gate; this is the condition
+            // used by the original RenderDragon caustics path.
+            if (uv1.y < 0.9) {
+              float c0 = disp(tiledCpos, NL_WATER_WAVE_SPEED*t);
+              float c1 = disp(tiledCpos*1.71 + vec3(0.37, 0.0, 0.61), NL_WATER_WAVE_SPEED*t*0.81);
+              c0 = c0*c0;
+              c1 = c1*c1;
+              float caustics = 0.66*c0 + 0.34*c1;
+              caustics = smoothstep(0.10, 0.76, caustics);
+              float lightMask = 0.24 + lit.y + lit.x*0.42;
+              light += NL_UNDERWATER_BRIGHTNESS*0.55
+                     + NL_CAUSTIC_INTENSITY*caustics*lightMask;
+            }
 
-            // Cool volumetric color response while retaining the engine fog.
-            vec3 scatterColor = mix(normalize(horizonCol), vec3(0.38, 0.68, 0.78), 0.48);
-            light *= mix(scatterColor, vec3_splat(0.6), lit.y*0.6);
+            // Cool underwater scattering without washing out the caustic contrast.
+            vec3 scatterColor = mix(normalize(horizonCol), vec3(0.34, 0.64, 0.76), 0.42);
+            light *= mix(scatterColor, vec3_splat(0.62), lit.y*0.52);
 
-            // Preserve the upstream underwater screen-space wave distortion.
             #ifdef NL_UNDERWATER_WAVE
               pos.xy += NL_UNDERWATER_WAVE*min(0.05*pos.z,0.6)*sin(t*1.2 + dot(cPos,vec3_splat(PI_HALF)));
             #endif
