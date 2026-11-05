@@ -4,21 +4,21 @@
 
 ## Objective
 
-Test the Java shaderpack route on Minecraft Bedrock through Magic Loader, using the original **Complementary Unbound** pack as the compatibility baseline. This is an experiment, not a claim that Java shaderpacks are natively supported by Bedrock.
+Test the Java shaderpack route on Minecraft Bedrock through Magic Loader, using **Bliss Shader** as the primary architectural reference and compatibility baseline. This is an experiment, not a claim that Java shaderpacks are natively supported by Bedrock.
 
 ## Evidence and constraints
 
 - The Magic Loader compatibility list identifies its tested target as **Magic Loader 0.1.1**.
-- Complementary Unbound is marked **generally working** (yellow), with some Iris-specific features broken. It is not marked fully working.
-- The compatibility list does not identify the exact Complementary release used in its test. Therefore the current upstream release must be tested separately rather than assumed compatible.
-- Complementary's official installation guidance identifies the pack as a Java Edition shaderpack for Iris or OptiFine. Magic Loader is the compatibility layer under investigation.
-- Complementary has a custom license. This repository will not mirror its ZIP, assets, or source. EIVORIS will use independently authored algorithms and code.
+- Bliss is marked fully working in the supplied Magic Loader compatibility list. This is a baseline signal, not proof that every Bliss release works on this Bedrock version/device.
+- Bliss uses a multi-pass Java shader architecture. EIVORIS will study the pipeline and reimplement its own code; no Bliss source, textures, or compiled pack will be copied.
+- Bliss's repository license notice is restrictive and credits Chocapic13 and other contributors. Treat upstream material as all-rights-reserved unless permission is granted.
+- Complementary Unbound is now a secondary comparison only.
 
 ## Test protocol
 
 1. Install the exact Magic Loader build being tested and record its version/build.
-2. Obtain Complementary Unbound from its official distribution. Keep the ZIP intact; do not repackage or commit it here.
-3. Record the exact Complementary version and Minecraft Bedrock version.
+2. Obtain Bliss from its official distribution. Keep the ZIP intact; do not repackage or commit it here.
+3. Record the exact Bliss revision/release and Minecraft Bedrock version.
 4. Test a clean world with no other graphics packs, first at default settings.
 5. Record each test below with screenshots and the log/error text where available.
 6. Only after the baseline loads, investigate individual passes and EIVORIS-owned replacements.
@@ -27,7 +27,7 @@ Test the Java shaderpack route on Minecraft Bedrock through Magic Loader, using 
 
 | Test | Expected observation | Result |
 |---|---|---|
-| Pack discovery | Complementary appears in Magic Loader | Not tested |
+| Pack discovery | Bliss appears in Magic Loader | Not tested |
 | Initial compile/load | World renders without black screen | Not tested |
 | Water | Water pass renders; no missing/opaque surfaces | Not tested |
 | Daylight | Sun/sky lighting visible | Not tested |
@@ -37,11 +37,13 @@ Test the Java shaderpack route on Minecraft Bedrock through Magic Loader, using 
 
 ## EIVORIS port order
 
-1. Water surface response (wave profile, normals, Fresnel, colour).
-2. Underwater attenuation and fog.
-3. Daylight/sky response.
-4. Shadows and ambient occlusion.
-5. Rain and permanent puddle response.
+1. Map Magic Loader's supported passes, uniforms, depth buffers, and texture formats.
+2. Reproduce a minimal known-good Bliss baseline on-device.
+3. Water surface response (wave profile, normals, Fresnel, colour).
+4. Underwater attenuation and fog.
+5. Daylight/sky response.
+6. Shadows and ambient occlusion.
+7. Rain and permanent puddle response.
 
 The first EIVORIS port target is a **fragment-space water response prototype**. True vertex displacement, screen-space reflections, volumetrics, and Iris-only features are separate capabilities and must not be claimed until verified in Magic Loader.
 
@@ -51,6 +53,7 @@ The Android target is a vivo Y22-class device with 4 GB physical RAM. Start with
 
 ## Files
 
+- `BLISS-REFERENCE-ARCHITECTURE.md`: analysis of Bliss's render pipeline and the independent EIVORIS implementation sequence.
 - `eivoris_water.glsl`: independently authored GLSL water math prototype, not a complete shaderpack and not yet wired to a Java shaderpack pass.
 - `TEST-RESULTS.md`: test log template.
 
