@@ -31,7 +31,7 @@ The goal is to develop EIVORIS-owned rendering modules for water, lighting, rain
 |:--|:--|:--|
 | 🌊 Water | Multi-scale displacement, analytic normals, water tint and Fresnel | Source module drafted |
 | ☀️ Lighting | Direct sun, sky fill, block light and ambient response | Source module drafted |
-| 🌧️ Rain | Surface wetness, roughness and rain haze | Source module drafted |
+| 🌧️ Rain | Atmospheric haze only; no wet ground overlay | Source module drafted |
 | 🪞 Reflection | Fresnel and environment reflection response | Source module drafted |
 | ✨ Effects | Tone mapping, color grading and atmospheric fog | Source module drafted |
 | 🌤️ Sky | Sky dome, sun/moon and atmospheric scattering | Not started |
@@ -47,11 +47,11 @@ The next milestone is to author EIVORIS-owned material entry points (starting wi
 
 MTBinLoader2 remains the intended Android loader. It loads compiled material binaries; it does not provide shader source, engine material interfaces, or a compiler.
 
-## 🎨 Visual Direction
+## 🧱 Third-party PBR Resource Packs\n\nEIVORIS does not bundle or replace block textures. The intended setup is to keep the selected resource pack's vanilla/PBR texture assets intact and let EIVORIS provide rendering behavior. However, **third-party PBR map sampling is not yet implemented or verified**. The current RenderChunk fragment entry point samples `s_MatTexture`, `s_SeasonsTexture`, and `s_LightMapTexture`; it has no verified normal/roughness/metallic texture bindings. Declaring guessed samplers would not create engine bindings. PBR compatibility is therefore marked experimental/pending until a target pack and its Android RenderDragon material convention are inspected and tested.\n\n## 🎨 Visual Direction
 
 - **Water — Bliss-inspired:** broad, smooth, layered movement, natural color depth and restrained sky reflections.
 - **Lighting — BSL-inspired:** warm direct daylight, balanced ambient fill, soft visual contrast and atmospheric depth.
-- **Rain:** wet material response, subtle haze and weather-aware lighting.
+- **Rain:** subtle atmospheric haze and weather-aware lighting; no artificial wet surface or puddle overlay.
 - **Reflections:** physically motivated Fresnel response using environment information available to the material.
 - **Effects:** controlled tone mapping, color separation and distance atmosphere.
 
