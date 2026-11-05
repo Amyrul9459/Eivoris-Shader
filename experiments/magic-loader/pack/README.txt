@@ -1,8 +1,8 @@
 EIVORIS — MAGIC LOADER WATER PROTOTYPE
 ======================================
 
-This is an early Java-style shaderpack prototype for testing through Magic Loader.
-It is NOT a Bedrock .mcpack and is NOT the existing RenderDragon shader.
+Early Java-style shaderpack prototype for testing through Magic Loader.
+This is NOT a Bedrock .mcpack and is NOT the existing RenderDragon shader.
 
 INSTALL / TEST
 1. Import/select this ZIP using Magic Loader's shaderpack workflow.
