@@ -14,26 +14,8 @@ float nlWindblow(vec3 pos, float t){
   return 0.25*val*val;
 }
 
-// Stable world-space rain impact field. It creates small expanding rings
-// without adding geometry or depending on texture UVs.
-// Animated, world-anchored circular rain marks on block surfaces.
-// This is a surface shader effect, not an engine particle emitter.
-// Permanent irregular shallow-water pools anchored to world coordinates.
-float eivorisPuddleMask(vec2 worldXZ) {
-  vec2 cell = floor(worldXZ * 0.22);
-  vec2 local = fract(worldXZ * 0.22) - 0.5;
-  float seed = fastRand(cell);
-  vec2 center = (vec2(fract(seed * 13.17), fract(seed * 27.31)) - 0.5) * 0.52;
-  vec2 delta = local - center;
-  delta.x *= 0.82 + fract(seed * 7.13) * 0.55;
-  delta.y *= 0.82 + fract(seed * 9.71) * 0.55;
-  float radius = 0.19 + fract(seed * 19.73) * 0.17;
-  float edgeNoise = 0.025 * sin(local.x * 29.0 + seed * 17.0)
-                  * sin(local.y * 23.0 - seed * 11.0);
-  float dist = length(delta) + edgeNoise;
-  return 1.0 - smoothstep(radius - 0.045, radius + 0.045, dist);
-}
-
+// World-anchored animated ring field retained as a future rain-splash input.
+// It does not alter block albedo, roughness, normals, or reflections by itself.
 float eivorisRainImpact(vec2 worldXZ, float t) {
   vec2 cell = floor(worldXZ * 0.82);
   vec2 local = fract(worldXZ * 0.82) - 0.5;
@@ -55,53 +37,13 @@ float eivorisRainImpact(vec2 worldXZ, float t) {
              + centerDimple * 0.22, 0.0, 1.0);
 }
 
+// Ground-reflection hook intentionally disabled.
+// EIVORIS does not render permanent puddles or rain-dependent wet coatings.
 vec4 nlRefl(
   inout vec4 color, nl_skycolor skycol, nl_environment env, vec3 viewDir, vec3 wPos, vec3 tiledCpos,
   vec3 CAMERA_POS, vec3 torchColor, vec2 lit, float camDist, float renderDist, highp float t
 ) {
-  vec4 wetRefl = vec4(0.0,0.0,0.0,0.0);
-
-  // Permanent shallow puddles; the mask is world-anchored and never depends on rain.
-  float wetness = 0.38 + 0.62 * lit.y * lit.y;
-  float endDist = renderDist * 0.6;
-  if (camDist < endDist && wPos.y < 0.0) {
-    vec2 worldXZ = (wPos + CAMERA_POS).xz;
-    float puddleMask = eivorisPuddleMask(worldXZ);
-    float cosR = max(viewDir.y, 0.0);
-    float reflective = wetness * (0.035 + puddleMask * 0.78);
-
-    // Animated concentric rings appear over puddles during rainfall only.
-    float impact = eivorisRainImpact(worldXZ, t) * env.rainFactor * puddleMask;
-    if (impact > 0.001) {
-      color.rgb += vec3(0.24, 0.34, 0.39) * impact * 0.20;
-      vec2 rippleDir = normalize(worldXZ + vec2(0.001));
-      viewDir.xz += rippleDir * impact * 0.012;
-      viewDir = normalize(viewDir);
-    }
-
-    viewDir.y = -viewDir.y;
-    wetRefl.rgb = nlRenderSky(skycol, env, viewDir, t, false);
-
-    #ifdef NL_CLOUD_AURORA_REFLECTION
-      vec4 cloudRefl = nlCloudAuroraReflection(skycol, env, viewDir, wPos, CAMERA_POS, t);
-      wetRefl.rgb = mix(wetRefl.rgb, cloudRefl.rgb, cloudRefl.a);
-    #endif
-
-    wetRefl.rgb += torchColor * lit.x * NL_TORCHLIGHT_INTENSITY;
-    float glint = pow(max(0.0, 1.0 - abs(impact - 0.48) * 5.0), 5.0);
-    wetRefl.rgb += vec3(0.62, 0.76, 0.82) * glint * env.rainFactor * 0.18;
-
-    wetRefl.a = calculateFresnel(cosR, 0.03) * reflective;
-    wetRefl.a *= clamp(2.0 - 2.0 * camDist / endDist, 0.0, 1.0);
-    wetRefl.a *= 1.0 + impact * 0.18;
-
-    // Pools are visibly darker and glossier than the surrounding block.
-    color.rgb *= 1.0 - puddleMask * 0.20;
-  }
-
-  // A restrained permanent damp tint remains outside the puddle patches.
-  color.rgb *= 1.0 - 0.035 * wetness;
-  return wetRefl;
+  return vec4(0.0);
 }
 
 #endif
