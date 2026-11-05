@@ -17,7 +17,7 @@
 #define NL_SUNLIGHT_INTENSITY   2.45
 #define NL_TORCHLIGHT_INTENSITY 1.0
 #define NL_SHADOW_INTENSITY     0.78
-#define NL_MIN_LIGHTING_BOOST   1.30
+#define NL_MIN_LIGHTING_BOOST   0.72
 //#define NL_BLINKING_TORCH
 //#define NL_CLOUD_SHADOW
 
@@ -31,10 +31,10 @@
 #define NL_NIGHT_MOONLIGHT_COL vec3(0.10,0.15,0.25)
 
 /* Torch colors */
-#define NL_OVERWORLD_TORCH_COL  vec3(1.0,0.72,0.48)
-#define NL_UNDERWATER_TORCH_COL vec3(1.0,0.72,0.48)
-#define NL_NETHER_TORCH_COL     vec3(1.0,0.72,0.48)
-#define NL_END_TORCH_COL        vec3(1.0,0.72,0.48)
+#define NL_OVERWORLD_TORCH_COL  vec3(1.0,0.56,0.27)
+#define NL_UNDERWATER_TORCH_COL vec3(0.96,0.62,0.34)
+#define NL_NETHER_TORCH_COL     vec3(1.0,0.48,0.22)
+#define NL_END_TORCH_COL        vec3(0.78,0.62,1.0)
 
 /* Fog */
 #define NL_FOG 0.88
@@ -64,14 +64,14 @@
 /* Water surface and tint */
 #define NL_WATER_TRANSPARENCY 0.38
 #define NL_WATER_BUMP 0.16
-#define NL_WATER_WAVE_SPEED 0.82
+#define NL_WATER_WAVE_SPEED 1.02
 #define NL_WATER_TEX_OPACITY 0.04
 #define NL_WATER_WAVE
 #define NL_WATER_TINT vec3(0.68,0.86,0.96)
 
 /* Underwater */
 #define NL_UNDERWATER_BRIGHTNESS 0.95
-#define NL_CAUSTIC_INTENSITY 2.35
+#define NL_CAUSTIC_INTENSITY 3.15
 #define NL_UNDERWATER_WAVE 0.14
 #define NL_UNDERWATER_STREAKS 1.0
 #define NL_UNDERWATER_TINT vec3(0.78,0.93,1.0)
