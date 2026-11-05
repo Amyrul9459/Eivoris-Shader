@@ -10,7 +10,6 @@ varying vec2 vTexCoord;
 varying vec4 vColor;
 varying vec3 vWaterNormal;
 varying vec3 vViewDirection;
-varying vec3 vWorldPosition;
 
 void main() {
     vec4 base = texture2D(texture, vTexCoord) * vColor;
