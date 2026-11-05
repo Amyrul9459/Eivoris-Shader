@@ -45,7 +45,7 @@ Test the Java shaderpack route on Minecraft Bedrock through Magic Loader, using 
 6. Shadows and ambient occlusion.
 7. Rain and permanent puddle response.
 
-The first EIVORIS port target is a **fragment-space water response prototype**. True vertex displacement, screen-space reflections, volumetrics, and Iris-only features are separate capabilities and must not be claimed until verified in Magic Loader.
+The first EIVORIS port target is now a **minimal water-pass shaderpack prototype** with low-amplitude vertex displacement, matching analytic normals, and Fresnel tint. It assumes common Iris/OptiFine uniforms and the water block ID convention; these assumptions still need runtime validation in Magic Loader. Refraction, screen-space reflections, underwater fog, volumetrics, and other advanced passes remain deferred.
 
 ## Device constraints
 
@@ -54,6 +54,7 @@ The Android target is a vivo Y22-class device with 4 GB physical RAM. Start with
 ## Files
 
 - `BLISS-REFERENCE-ARCHITECTURE.md`: analysis of Bliss's render pipeline and the independent EIVORIS implementation sequence.
+- `pack/`: first importable Java-style water shaderpack prototype. Use the separately supplied `EIVORIS-Magic-Water-Prototype.zip` for device testing.
 - `eivoris_water.glsl`: independently authored GLSL water math prototype, not a complete shaderpack and not yet wired to a Java shaderpack pass.
 - `TEST-RESULTS.md`: test log template.
 
