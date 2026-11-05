@@ -83,6 +83,43 @@ jobs:
           print("Patched dual-layer underwater caustics and cool scattering")
           PY
 
+      - name: Audit the complete RenderDragon material source set
+        working-directory: upstream
+        run: |
+          python - <<'PY'
+          import tomllib
+          from pathlib import Path
+
+          config = tomllib.loads(Path("src/newb/pack_config.toml").read_text())
+          materials = config.get("materials", [])
+          if not materials:
+              raise SystemExit("pack_config.toml declares no materials")
+
+          missing = []
+          for name in materials:
+              folder = Path("src/materials") / name
+              required = [
+                  folder / "config.json",
+                  folder / "material.json",
+                  folder / "vertex.sc",
+                  folder / "fragment.sc",
+                  folder / "varying.def.sc",
+              ]
+              absent = [str(path) for path in required if not path.is_file()]
+              if absent:
+                  missing.extend(absent)
+
+          if missing:
+              raise SystemExit(
+                  "Material source audit failed; missing files:\n"
+                  + "\n".join(missing)
+              )
+
+          print(f"Audited {len(materials)} complete material source directories:")
+          for name in materials:
+              print(f" - {name}")
+          PY
+
       - name: Install build dependencies
         working-directory: upstream
         run: python -m pip install -r requirements.txt
