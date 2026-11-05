@@ -45,7 +45,7 @@ jobs:
 
           path = Path("src/newb/functions/lighting.h")
           source = path.read_text()
-          pattern = r"void nlUnderwaterLighting\\(.*?\\n}\\n(?=\\nvec3 nlEntityLighting)"
+          pattern = r"void nlUnderwaterLighting\(.*?\n}\n(?=\nvec3 nlEntityLighting)"
           replacement = """void nlUnderwaterLighting(inout vec3 light, inout vec3 pos, vec2 lit, vec2 uv1, vec3 tiledCpos, vec3 cPos, highp float t, vec3 horizonCol) {
             // uv1.y is the sky-lightmap channel, not camera depth. Use it only
             // to modulate caustic visibility; do not treat it as a depth buffer.
