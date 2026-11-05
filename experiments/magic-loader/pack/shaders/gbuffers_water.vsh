@@ -14,9 +14,6 @@ varying vec2 vTexCoord;
 varying vec4 vColor;
 varying vec3 vWaterNormal;
 varying vec3 vViewDirection;
-varying vec3 vWorldPosition;
-
-const float EIVORIS_PI = 3.14159265359;
 
 float eivorisWaveHeight(vec2 p, float t) {
     float a = sin(dot(p, normalize(vec2( 1.00,  0.22)) * 0.34) + t * 0.72) * 0.030;
