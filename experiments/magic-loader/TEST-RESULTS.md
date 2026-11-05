@@ -4,7 +4,7 @@
 - Minecraft Bedrock version:
 - Android device / GPU:
 - Bliss Shader release/revision:
-- Complementary ZIP source:
+- Bliss package source:
 - Date:
 
 ## Results
