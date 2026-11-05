@@ -1,9 +1,9 @@
-# Magic Loader baseline test log
+# Bliss / Magic Loader baseline test log
 
 - Magic Loader version/build:
 - Minecraft Bedrock version:
 - Android device / GPU:
-- Complementary Unbound release:
+- Bliss Shader release/revision:
 - Complementary ZIP source:
 - Date:
 
@@ -16,7 +16,7 @@
 | World rendered | Not tested | |
 | Water visible | Not tested | |
 | Water transparency | Not tested | |
-| Water reflections | Not tested | |
+| Water reflections / SSR | Not tested | |
 | Daylight / sky | Not tested | |
 | Shadows | Not tested | |
 | Underwater | Not tested | |
