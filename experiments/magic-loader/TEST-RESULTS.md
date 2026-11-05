@@ -1,5 +1,12 @@
 # Bliss / Magic Loader baseline test log
 
+## Prototype status
+
+- EIVORIS water-pass prototype source added under `pack/`.
+- Test ZIP assembled as `EIVORIS-Magic-Water-Prototype.zip` for manual import.
+- Static source review completed; no GLSL compiler or Magic Loader runtime validation was available in this environment.
+- Device test: pending.
+
 - Magic Loader version/build:
 - Minecraft Bedrock version:
 - Android device / GPU:
