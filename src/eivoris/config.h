@@ -140,8 +140,9 @@
 #define NL_MOON_TILT 45.0
 /* God rays disabled: no custom volumetric fog pass. */
 #undef NL_GODRAY
-#define NL_GROUND_RAIN_WETNESS 1.0 /* legacy compatibility; wet finish is permanent */
-#define NL_GROUND_RAIN_PUDDLES 0.7
+/* Rain does not alter ground materials: no wet sheen or puddles. */
+#undef NL_GROUND_RAIN_WETNESS
+#undef NL_GROUND_RAIN_PUDDLES
 #define NL_ENTITY_BRIGHTNESS 0.65
 #define NL_ENTITY_EDGE_HIGHLIGHT 0.41
 #define NL_WEATHER_SPECK 0.6
