@@ -1,0 +1,33 @@
+name: Package EIVORIS Java Water Shader
+
+on:
+  push:
+    branches:
+      - java-water-prototype
+    paths:
+      - "java/EIVORIS-Water/**"
+      - ".github/workflows/package-java-water.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build shaderpack ZIP
+        run: |
+          cd java/EIVORIS-Water
+          zip -r ../../EIVORIS-Water-MagicLoader.zip .
+
+      - name: Upload shaderpack
+        uses: actions/upload-artifact@v4
+        with:
+          name: EIVORIS-Water-MagicLoader
+          path: EIVORIS-Water-MagicLoader.zip
+          if-no-files-found: error
+          retention-days: 30
