@@ -3,7 +3,7 @@ name: Build EIVORIS Shader
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, integration/newb-x-legacy-material-pipeline]
     paths:
       - "src/eivoris/**"
       - "src/materials/**"
