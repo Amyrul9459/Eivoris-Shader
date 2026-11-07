@@ -8,16 +8,16 @@
 */
 
 /* Color response */
-#define NL_TONEMAP_TYPE 4
-#define NL_GAMMA 1.00
-#define NL_EXPOSURE 1.10
-#define NL_SATURATION 1.02
+#define NL_TONEMAP_TYPE 3
+#define NL_GAMMA 1.16
+#define NL_EXPOSURE 1.18
+#define NL_SATURATION 1.08
 
 /* World lighting — balanced cinematic daylight */
-#define NL_SUNLIGHT_INTENSITY   2.45
-#define NL_TORCHLIGHT_INTENSITY 1.18
-#define NL_SHADOW_INTENSITY     0.78
-#define NL_MIN_LIGHTING_BOOST   0.32
+#define NL_SUNLIGHT_INTENSITY   3.10
+#define NL_TORCHLIGHT_INTENSITY 1.08
+#define NL_SHADOW_INTENSITY     0.72
+#define NL_MIN_LIGHTING_BOOST   1.10
 //#define NL_BLINKING_TORCH
 //#define NL_CLOUD_SHADOW
 
@@ -26,14 +26,14 @@
 #define NL_END_AMBIENT    vec3(1.98,1.25,2.3)
 
 /* Sun/moon light color */
-#define NL_DAWN_SUNLIGHT_COL   vec3(1.0,0.70,0.52)
-#define NL_NOON_SUNLIGHT_COL   vec3(1.0,0.97,0.93)
-#define NL_NIGHT_MOONLIGHT_COL vec3(0.10,0.15,0.25)
+#define NL_DAWN_SUNLIGHT_COL   vec3(1.0,0.48,0.27)
+#define NL_NOON_SUNLIGHT_COL   vec3(1.0,0.86,0.73)
+#define NL_NIGHT_MOONLIGHT_COL vec3(0.12,0.19,0.34)
 
 /* Torch colors */
-#define NL_OVERWORLD_TORCH_COL  vec3(1.0,0.42,0.15)
-#define NL_UNDERWATER_TORCH_COL vec3(0.32,0.68,1.0)
-#define NL_NETHER_TORCH_COL     vec3(1.0,0.38,0.12)
+#define NL_OVERWORLD_TORCH_COL  vec3(1.0,0.52,0.20)
+#define NL_UNDERWATER_TORCH_COL vec3(0.58,0.78,1.0)
+#define NL_NETHER_TORCH_COL     vec3(1.0,0.45,0.16)
 #define NL_END_TORCH_COL        vec3(0.78,0.62,1.0)
 
 /* Fog */
@@ -48,11 +48,11 @@
 #define NL_SKY_RAIN_MIX_FACTOR 0.9
 
 #define NL_DAWN_ZENITH_COL   vec3(0.16,0.30,0.52)
-#define NL_DAWN_HORIZON_COL  vec3(1.25,0.48,0.32)
-#define NL_DAWN_EDGE_COL     vec3(1.25,0.72,0.52)
-#define NL_DAY_ZENITH_COL    vec3(0.34,0.59,0.90)
-#define NL_DAY_HORIZON_COL   vec3(0.88,0.94,1.00)
-#define NL_DAY_EDGE_COL      vec3(0.98,0.99,1.00)
+#define NL_DAWN_HORIZON_COL  vec3(1.65,0.52,0.30)
+#define NL_DAWN_EDGE_COL     vec3(1.55,0.82,0.58)
+#define NL_DAY_ZENITH_COL    vec3(0.30,0.78,1.25)
+#define NL_DAY_HORIZON_COL   vec3(1.0,1.22,1.35)
+#define NL_DAY_EDGE_COL      vec3(1.18,1.25,1.30)
 #define NL_NIGHT_ZENITH_COL  vec3(0.008,0.048,0.08)
 #define NL_NIGHT_HORIZON_COL vec3(0.02,0.06,0.1)
 #define NL_NIGHT_EDGE_COL    vec3(0.04,0.08,0.1)
