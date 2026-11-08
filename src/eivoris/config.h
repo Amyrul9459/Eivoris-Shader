@@ -30,10 +30,10 @@
 #define NL_NOON_SUNLIGHT_COL   vec3(1.0,0.86,0.73)
 #define NL_NIGHT_MOONLIGHT_COL vec3(0.12,0.19,0.34)
 
-/* Torch colors */
-#define NL_OVERWORLD_TORCH_COL  vec3(1.0,0.52,0.20)
-#define NL_UNDERWATER_TORCH_COL vec3(0.58,0.78,1.0)
-#define NL_NETHER_TORCH_COL     vec3(1.0,0.45,0.16)
+/* Torch colors — deeper amber/orange firelight, not pale yellow */
+#define NL_OVERWORLD_TORCH_COL  vec3(1.0,0.34,0.085)
+#define NL_UNDERWATER_TORCH_COL vec3(1.0,0.55,0.24)
+#define NL_NETHER_TORCH_COL     vec3(1.0,0.30,0.075)
 #define NL_END_TORCH_COL        vec3(0.78,0.62,1.0)
 
 /* Fog */
