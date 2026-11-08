@@ -1,11 +1,19 @@
+# EIVORIS Android material-bin build pipeline
 name: Build EIVORIS Shader
 
 on:
   workflow_dispatch:
   push:
+    branches: [main, integration/newb-x-legacy-material-pipeline]
+    paths:
+      - "src/eivoris/**"
+      - "src/materials/**"
+      - ".github/workflows/build-shader.yml"
+  pull_request:
     branches: [main]
     paths:
       - "src/eivoris/**"
+      - "src/materials/**"
       - ".github/workflows/build-shader.yml"
 
 permissions:
@@ -36,44 +44,59 @@ jobs:
           cp src/eivoris/functions/water.h upstream/src/newb/functions/water.h
           cp src/eivoris/functions/rain.h upstream/src/newb/functions/rain.h
 
-      - name: Improve underwater light transport and caustics
+      - name: Integrate and verify EIVORIS runtime effects
+        run: python src/eivoris/tools/integrate_upstream.py
+
+      - name: Audit the complete RenderDragon material source set
         working-directory: upstream
         run: |
           python - <<'PY'
+          import tomllib
           from pathlib import Path
-          import re
 
-          path = Path("src/newb/functions/lighting.h")
-          source = path.read_text()
-          pattern = r"void nlUnderwaterLighting\(.*?\n}\n(?=\nvec3 nlEntityLighting)"
-          replacement = """void nlUnderwaterLighting(inout vec3 light, inout vec3 pos, vec2 lit, vec2 uv1, vec3 tiledCpos, vec3 cPos, highp float t, vec3 horizonCol) {
-            // Keep the engine's underwater lightmap gate; this is the condition
-            // used by the original RenderDragon caustics path.
-            if (uv1.y < 0.9) {
-              float c0 = disp(tiledCpos, NL_WATER_WAVE_SPEED*t);
-              float c1 = disp(tiledCpos*1.71 + vec3(0.37, 0.0, 0.61), NL_WATER_WAVE_SPEED*t*0.81);
-              c0 = c0*c0;
-              c1 = c1*c1;
-              float caustics = 0.66*c0 + 0.34*c1;
-              caustics = smoothstep(0.10, 0.76, caustics);
-              float lightMask = 0.24 + lit.y + lit.x*0.42;
-              light += NL_UNDERWATER_BRIGHTNESS*0.55
-                     + NL_CAUSTIC_INTENSITY*caustics*lightMask;
-            }
+          config = tomllib.loads(Path("src/newb/pack_config.toml").read_text())
+          materials = config.get("materials", [])
+          if not materials:
+              raise SystemExit("pack_config.toml declares no materials")
 
-            // Cool underwater scattering without washing out the caustic contrast.
-            vec3 scatterColor = mix(normalize(horizonCol), vec3(0.34, 0.64, 0.76), 0.42);
-            light *= mix(scatterColor, vec3_splat(0.62), lit.y*0.52);
+          missing = []
+          for name in materials:
+              folder = Path("src/materials") / name
+              required = [
+                  folder / "config.json",
+                  folder / "material.json",
+                  folder / "vertex.sc",
+                  folder / "fragment.sc",
+                  folder / "varying.def.sc",
+              ]
+              absent = [str(path) for path in required if not path.is_file()]
+              if absent:
+                  missing.extend(absent)
 
-            #ifdef NL_UNDERWATER_WAVE
-              pos.xy += NL_UNDERWATER_WAVE*min(0.05*pos.z,0.6)*sin(t*1.2 + dot(cPos,vec3_splat(PI_HALF)));
-            #endif
-          }"""
-          updated, count = re.subn(pattern, replacement, source, count=1, flags=re.S)
-          if count != 1:
-              raise SystemExit("Could not locate nlUnderwaterLighting() in pinned upstream source")
-          path.write_text(updated)
-          print("Patched dual-layer underwater caustics and cool scattering")
+          if missing:
+              raise SystemExit(
+                  "Material source audit failed; missing files:\\n"
+                  + "\\n".join(missing)
+              )
+
+          water = Path("src/newb/functions/water.h").read_text()
+          lighting = Path("src/newb/functions/lighting.h").read_text()
+          vertex = Path("src/materials/RenderChunk/vertex.sc").read_text()
+          required_hooks = {
+              "EIVORIS procedural water": "eivorisWaterWaveField" in water,
+              "sun reflection": "env.sunDir" in water,
+              "moon reflection": "env.moonDir" in water,
+              "underwater caustics": "nlEivorisCaustics(worldPos, t)" in lighting,
+              "RenderChunk world-position hook": "cPos, gPos, t, skycol.horizon" in vertex,
+          }
+          failed = [name for name, ok in required_hooks.items() if not ok]
+          if failed:
+              raise SystemExit("Runtime hook audit failed: " + ", ".join(failed))
+
+          print(f"Audited {len(materials)} complete material source directories:")
+          for name in materials:
+              print(f" - {name}")
+          print("All EIVORIS runtime hooks are connected to the compiled source.")
           PY
 
       - name: Install build dependencies
@@ -104,6 +127,9 @@ jobs:
 
           archive = archives[0]
           with ZipFile(archive, "r") as source:
+              bad_member = source.testzip()
+              if bad_member:
+                  raise SystemExit(f"Corrupt ZIP member: {bad_member}")
               names = source.namelist()
               material_bins = [
                   name for name in names
