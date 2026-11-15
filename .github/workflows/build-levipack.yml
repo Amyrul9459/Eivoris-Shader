@@ -1,0 +1,53 @@
+name: Build EIVORIS LeviPack
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [levipack-native]
+    paths:
+      - "levipack/**"
+      - ".github/workflows/build-levipack.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate native payload
+        run: |
+          test -f levipack/levishaderLITE.so || {
+            echo "Missing levipack/levishaderLITE.so. Add the reviewed ARM64 native payload before packaging." >&2
+            exit 1
+          }
+          file levipack/levishaderLITE.so | grep -q 'ARM aarch64'
+      - name: Build .levipack
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          import json
+          root = Path('levipack')
+          manifest = json.loads((root / 'manifest.json').read_text())
+          entry = root / manifest['entry']
+          if not entry.is_file():
+              raise SystemExit(f"Manifest entry missing: {entry}")
+          output = Path('dist/EIVORIS-LeviPack-' + manifest['version'] + '.levipack')
+          output.parent.mkdir(parents=True, exist_ok=True)
+          with ZipFile(output, 'w', ZIP_DEFLATED) as pack:
+              pack.write(root / 'manifest.json', 'manifest.json')
+              pack.write(entry, manifest['entry'])
+          with ZipFile(output) as pack:
+              names = set(pack.namelist())
+              if {'manifest.json', manifest['entry']} - names:
+                  raise SystemExit('Package validation failed')
+          print(f'Created {output} ({output.stat().st_size} bytes)')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EIVORIS-LeviPack-Android
+          path: dist/*.levipack
+          if-no-files-found: error
+          retention-days: 30
