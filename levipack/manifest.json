@@ -1,0 +1,11 @@
+{
+  "type": "preload-native",
+  "name": "EIVORIS",
+  "author": "Amyrul9459",
+  "version": "0.1.0-test",
+  "entry": "levishaderLITE.so",
+  "minecraft_versions": [
+    "1.26.*"
+  ],
+  "description": "EIVORIS LeviPack experimental bootstrap. Native rendering implementation is inherited from LeviShader LITE 1.3.0; EIVORIS-specific rendering changes are not included yet."
+}
