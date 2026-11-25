@@ -4,22 +4,22 @@ import re
 path = Path("upstream/src/newb/config.h")
 text = path.read_text()
 
-# EIVORIS BSL-inspired lighting profile: brighter daylight, softer shadow floor,
+# EIVORIS PHOTON lighting profile: neutral daylight, controlled contrast,
 # cooler ambient shadows and warm practical light sources.
 values = {
     "NL_TONEMAP_TYPE": "4",
-    "NL_GAMMA": "1.18",
-    "NL_SUNLIGHT_INTENSITY": "3.15",
-    "NL_TORCHLIGHT_INTENSITY": "1.28",
-    "NL_SHADOW_INTENSITY": "0.58",
-    "NL_MIN_LIGHTING_BOOST": "1.72",
-    "NL_DAWN_SUNLIGHT_COL": "vec3(1.0,0.48,0.24)",
-    "NL_NOON_SUNLIGHT_COL": "vec3(1.0,0.91,0.78)",
-    "NL_NIGHT_MOONLIGHT_COL": "vec3(0.20,0.29,0.52)",
-    "NL_OVERWORLD_TORCH_COL": "vec3(1.0,0.43,0.13)",
-    "NL_UNDERWATER_TORCH_COL": "vec3(1.0,0.48,0.19)",
-    "NL_NETHER_TORCH_COL": "vec3(1.0,0.36,0.10)",
-    "NL_END_TORCH_COL": "vec3(1.0,0.58,0.27)",
+    "NL_GAMMA": "1.12",
+    "NL_SUNLIGHT_INTENSITY": "2.95",
+    "NL_TORCHLIGHT_INTENSITY": "1.18",
+    "NL_SHADOW_INTENSITY": "0.64",
+    "NL_MIN_LIGHTING_BOOST": "1.48",
+    "NL_DAWN_SUNLIGHT_COL": "vec3(1.0,0.43,0.22)",
+    "NL_NOON_SUNLIGHT_COL": "vec3(1.0,0.96,0.88)",
+    "NL_NIGHT_MOONLIGHT_COL": "vec3(0.24,0.34,0.58)",
+    "NL_OVERWORLD_TORCH_COL": "vec3(1.0,0.48,0.20)",
+    "NL_UNDERWATER_TORCH_COL": "vec3(1.0,0.48,0.20)",
+    "NL_NETHER_TORCH_COL": "vec3(1.0,0.38,0.12)",
+    "NL_END_TORCH_COL": "vec3(1.0,0.58,0.30)",
     "NL_NETHER_AMBIENT": "vec3(2.35,1.42,1.10)",
     "NL_END_AMBIENT": "vec3(1.65,1.20,2.05)",
 }
