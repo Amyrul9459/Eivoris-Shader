@@ -1,8 +1,8 @@
-# EIVORIS Shader
+# EIVORIS PHOTON
 
-EIVORIS is being rebuilt around NEWB X Legacy as its RenderDragon material and build foundation. The first development milestone is water; lighting, sky, rain and other effects will be tuned only after water is validated in-game.
+EIVORIS PHOTON is a Photon-inspired Bedrock shader built on the NEWB X Legacy RenderDragon material pipeline. NEWB supplies the material architecture and Android compiler path; EIVORIS supplies its own visual tuning and water model. The target runtime is MTBinLoader2 on Android.
 
-## Water milestone 0.2
+## PHOTON 0.1.0 — first Android milestone
 
 The water implementation targets actual vertex displacement in the RenderChunk vertex stage, not normal-map animation alone:
 
@@ -14,7 +14,7 @@ The water implementation targets actual vertex displacement in the RenderChunk v
 
 **Geometry limitation:** RenderChunk can only displace vertices Minecraft supplies. It cannot subdivide the water mesh. If the vanilla water surface has only a few vertices per block, displacement may appear as coarse planar facets rather than a continuously tessellated ocean. The Android build must be tested in-game before amplitude, wavelength or mesh limitations can be judged.
 
-## Build
+## Build and test
 
 GitHub Actions builds the Android .mcpack against NEWB X Legacy and uploads eivoris-shader.mcpack as an artifact. MTBinLoader2 is the intended Android material loader. The pack is not considered tested until it has been imported and inspected in Minecraft on-device.
 
