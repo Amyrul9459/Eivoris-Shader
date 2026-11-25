@@ -30,12 +30,24 @@ jobs:
         working-directory: upstream
         run: ./build.sh pack -p android -v 2
       - name: Validate MTBinLoader2 package
+        id: package
         working-directory: upstream
         run: |
           python - <<'PY'
           from pathlib import Path
           from zipfile import ZipFile
           import json
+          import re
+
+          config = Path("src/newb/pack_config.toml").read_text()
+          match = re.search(r"(?m)^version\\s*=\\s*\\[([^]]+)\\]", config)
+          if not match:
+              raise SystemExit("Could not read EIVORIS version from pack_config.toml")
+          version_parts = [part.strip() for part in match.group(1).split(",") if part.strip()]
+          if not version_parts or not all(part.isdigit() for part in version_parts):
+              raise SystemExit("Invalid EIVORIS version in pack_config.toml")
+          version = ".".join(version_parts)
+
           packs = list(Path("build").glob("*.mcpack"))
           if len(packs) != 1:
               raise SystemExit(f"Expected one .mcpack, found {len(packs)}")
@@ -53,16 +65,24 @@ jobs:
               print(f"Validated {len(bins)} compiled material binaries")
               for item in bins:
                   print(" -", item)
-          target = Path("build/eivoris-shader.mcpack")
+
+          target = Path(f"build/eivoris-shader-v{version}.mcpack")
           if target.exists():
               target.unlink()
           pack.rename(target)
           print("Created", target)
+          with open(Path.home() / "version.txt", "w") as f:
+              f.write(version)
+          with open(Path.home() / "version.txt") as f:
+              version = f.read().strip()
+          import os
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"version={version}\\n")
           PY
       - name: Upload Android MTBinLoader2 pack
         uses: actions/upload-artifact@v4
         with:
-          name: eivoris-shader-android
-          path: upstream/build/eivoris-shader.mcpack
+          name: eivoris-shader-android-v${{ steps.package.outputs.version }}
+          path: upstream/build/eivoris-shader-v*.mcpack
           if-no-files-found: error
           retention-days: 30
