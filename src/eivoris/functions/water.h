@@ -6,9 +6,8 @@
 #include "clouds.h"
 #include "noise.h"
 
-// EIVORIS WATER 0.3 — irregular, asymmetric geometric wave field.
-// The field is continuous in world XZ; adjacent water vertices evaluate
-// the same height. No horizontal displacement is applied.
+// EIVORIS WATER 0.4 — irregular geometric waves with a cleaner reflection response.
+// The wave field remains continuous in world XZ. No horizontal displacement is used.
 
 float eivorisHash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
@@ -28,7 +27,6 @@ float eivorisValueNoise(vec2 p) {
 }
 
 float eivorisWaterRaw(vec2 p, highp float t) {
-  // Smoothly varying phase and amplitude prevent a synchronized, tiled look.
   float broad = eivorisValueNoise(p * 0.115 + vec2(0.013 * t, -0.009 * t));
   float detail = eivorisValueNoise(p * 0.31 + vec2(-0.021 * t, 0.017 * t));
   float phaseJitter = (broad - 0.5) * 2.2 + (detail - 0.5) * 0.9;
@@ -44,7 +42,6 @@ float eivorisWaterRaw(vec2 p, highp float t) {
   float q2 = 6.2831853 / 2.9 * dot(p, d2) - 1.31 * t - phaseJitter * 1.2 + 3.1;
   float q3 = 6.2831853 / 2.15 * dot(p, d3) - 1.67 * t + detail * 2.0;
 
-  // Unequal directions, wavelengths and speeds create a rougher composite.
   return amplitude * (
       0.090 * sin(q0)
     + 0.048 * sin(q1)
@@ -55,15 +52,11 @@ float eivorisWaterRaw(vec2 p, highp float t) {
 
 float eivorisWaterHeight(vec2 p, highp float t) {
   float raw = eivorisWaterRaw(p, t);
-
-  // Suppress upward crests; strengthen downward troughs.
-  // Positive displacement is tightly capped to protect adjacent block sides.
   float asymmetric = raw < 0.0 ? raw * 1.22 : raw * 0.20;
   return clamp(asymmetric, -0.19, 0.025);
 }
 
 vec2 eivorisWaterGradient(vec2 p, highp float t) {
-  // Finite differences follow the asymmetric/noise-modulated height field.
   const float e = 0.075;
   float hx1 = eivorisWaterHeight(p + vec2(e, 0.0), t);
   float hx0 = eivorisWaterHeight(p - vec2(e, 0.0), t);
@@ -86,15 +79,15 @@ vec4 nlWater(
   vec2 worldXZ = gPos.xz;
   float distanceFade = 1.0 - smoothstep(42.0, 76.0, camDist);
 
-  // Vertical-only displacement: no vertex can drift horizontally into a
-  // neighboring solid block. Crest height is capped at +0.025 block.
   if (fractCposY > 0.0) {
     #ifndef NO_WAVE
       wPos.y += eivorisWaterHeight(worldXZ, t) * distanceFade;
     #endif
   }
 
-  vec2 slope = eivorisWaterGradient(worldXZ, t) * distanceFade;
+  // Keep the geometric wave shape, but soften its reflection normal slightly.
+  // This prevents small vertex slopes from breaking the reflected sky into bands.
+  vec2 slope = eivorisWaterGradient(worldXZ, t) * distanceFade * 0.62;
   vec3 nrm;
   if (fractCposY > 0.0) {
     #ifndef NO_WAVE
@@ -107,15 +100,42 @@ vec4 nlWater(
       movingNoise2D(gPos.xz + gPos.yy, NL_WATER_WAVE_SPEED * t, 0.6),
       movingNoise2D(gPos.zx + gPos.yy, NL_WATER_WAVE_SPEED * t + 1.7, 0.6)
     );
-    nrm = normalize(vec3(normalize(viewDir.xz) + sideBump * NL_WATER_BUMP * 0.45, -0.12));
+    nrm = normalize(vec3(normalize(viewDir.xz) + sideBump * NL_WATER_BUMP * 0.30, -0.12));
   }
 
   float cosR = dot(nrm, viewDir);
   vec3 reflectedDir = viewDir - 2.0 * cosR * nrm;
+  vec3 skyReflectionDir = normalize(vec3(reflectedDir.x, -reflectedDir.y, reflectedDir.z));
   vec3 waterRefl = nlRenderSky(skycol, env, reflectedDir, t, false);
-  waterRefl += torchColor * NL_TORCHLIGHT_INTENSITY * lit.x
-             * pow(max(0.0, 0.5 + 0.5 * sin(16.0 * reflectedDir.x)
-                                      * sin(16.0 * reflectedDir.z)), 2.0);
+
+  // Preserve the upstream cloud/aurora reflection path when the reflected ray
+  // points toward the sky. This is a real procedural sky feature, not fake terrain.
+  #ifdef NL_CLOUD_AURORA_REFLECTION
+    if (reflectedDir.y < 0.0) {
+      vec4 cloudRefl = nlCloudAuroraReflection(skycol, env, reflectedDir, wPos, CAMERA_POS, t);
+      waterRefl = mix(waterRefl, cloudRefl.rgb, cloudRefl.a);
+    }
+  #endif
+
+  // Narrow sun glint plus a wider highlight creates a readable reflection path.
+  // The sky direction is Y-flipped here to match nlRenderSky's coordinate convention.
+  float sunAlignment = max(dot(skyReflectionDir, normalize(env.sunDir)), 0.0);
+  float sunDisk = pow(sunAlignment, 180.0);
+  float sunBloom = pow(sunAlignment, 34.0);
+  float sunVisibility = (1.0 - env.rainFactor) * smoothstep(-0.20, 0.08, env.dayFactor);
+  vec3 sunColor = mix(vec3(1.0, 0.48, 0.22), vec3(1.0, 0.86, 0.66),
+                      smoothstep(-0.10, 0.65, env.dayFactor));
+  waterRefl += sunColor * (1.35 * sunDisk + 0.16 * sunBloom) * sunVisibility;
+
+  // Moon reflection remains subtle and cool at night.
+  float moonAlignment = max(dot(skyReflectionDir, normalize(env.moonDir)), 0.0);
+  float moonGlint = pow(moonAlignment, 110.0) * smoothstep(0.05, 0.55, -env.dayFactor);
+  waterRefl += vec3(0.48, 0.60, 0.88) * moonGlint * (1.0 - env.rainFactor);
+
+  // Torch sparkle is restrained to avoid the old repeating checker-like pattern.
+  float torchSpark = pow(max(0.0, dot(skyReflectionDir, normalize(vec3(viewDir.x, 0.35, viewDir.z)))), 24.0);
+  waterRefl += torchColor * NL_TORCHLIGHT_INTENSITY * lit.x * torchSpark * 0.08;
+
   if (!env.end) waterRefl *= 0.05 + lit.y * 1.14;
   waterRefl *= 1.0 - 0.68 * env.rainFactor;
 
