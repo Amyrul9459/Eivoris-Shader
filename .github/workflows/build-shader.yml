@@ -20,6 +20,7 @@ jobs:
           cp src/eivoris/config.h upstream/src/newb/config.h
           cp src/eivoris/pack_config.toml upstream/src/newb/pack_config.toml
           cp src/eivoris/functions/water.h upstream/src/newb/functions/water.h
+          cp src/eivoris/functions/lighting.h upstream/src/newb/functions/lighting.h
           python scripts/apply_bsl_lighting.py
       - name: Install build dependencies
         working-directory: upstream
