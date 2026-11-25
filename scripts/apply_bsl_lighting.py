@@ -33,7 +33,7 @@ for key, value in values.items():
 # Enable subtle cool-shadow / warm-highlight color grading. The EIVORIS
 # config overlay is self-contained and does not inherit upstream tint macros.
 if "#define NL_TINT_LOW" not in text:
-    marker = "#define NL_GAMMA 1.18"
+    marker = "#define NL_GAMMA 1.12"
     if marker not in text:
         raise SystemExit("Could not locate patched gamma definition for tint insertion")
     text = text.replace(
