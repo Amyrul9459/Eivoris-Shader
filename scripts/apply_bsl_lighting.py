@@ -18,11 +18,11 @@ required = (
     "NL_NIGHT_MOONLIGHT_COL",
 )
 for key in required:
-    matches = re.findall(rf"^\\s*#define\\s+{key}\\s+[^\\n]+$", text, flags=re.M)
+    matches = re.findall(rf"^\s*#define\s+{key}\s+[^\n]+$", text, flags=re.M)
     if len(matches) != 1:
         raise SystemExit(f"Expected exactly one EIVORIS definition for {key}; found {len(matches)}")
 
-if not re.search(r"^\\s*#define\\s+NL_TINT\\s*$", text, flags=re.M):
+if not re.search(r"^\s*#define\s+NL_TINT\s*$", text, flags=re.M):
     raise SystemExit("EIVORIS color grading macro NL_TINT is missing")
 
 print("Validated EIVORIS lighting profile; no upstream values were overwritten.")
