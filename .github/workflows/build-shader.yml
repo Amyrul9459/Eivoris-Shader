@@ -1,7 +1,7 @@
 name: Build EIVORIS Shader
 on:
   push:
-    branches: [main]
+    branches: [main, photon-foundation]
   workflow_dispatch:
 permissions:
   contents: read
