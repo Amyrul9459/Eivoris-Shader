@@ -30,9 +30,18 @@ for key, value in values.items():
     if count != 1:
         raise SystemExit(f"Could not patch exactly one definition for {key}")
 
-# Enable subtle cool-shadow / warm-highlight color grading.
-if "#define NL_TINT_LOW" in text and "#define NL_TINT_HIGH" in text:
-    text = re.sub(r"^\s*//#define NL_TINT\s*$", "#define NL_TINT", text, count=1, flags=re.M)
+# Enable subtle cool-shadow / warm-highlight color grading. The EIVORIS
+# config overlay is self-contained and does not inherit upstream tint macros.
+if "#define NL_TINT_LOW" not in text:
+    marker = "#define NL_GAMMA 1.18"
+    if marker not in text:
+        raise SystemExit("Could not locate patched gamma definition for tint insertion")
+    text = text.replace(
+        marker,
+        marker + "\n#define NL_TINT\n#define NL_TINT_LOW vec3(0.42,0.56,0.92)\n#define NL_TINT_HIGH vec3(1.12,0.94,0.78)",
+        1,
+    )
+else:
     text = re.sub(r"^\s*#define NL_TINT_LOW\s+[^\n]+$", "#define NL_TINT_LOW vec3(0.42,0.56,0.92)", text, count=1, flags=re.M)
     text = re.sub(r"^\s*#define NL_TINT_HIGH\s+[^\n]+$", "#define NL_TINT_HIGH vec3(1.12,0.94,0.78)", text, count=1, flags=re.M)
 
