@@ -1,0 +1,36 @@
+name: Inspect Claude Shader Package
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect uploaded Claude package
+        run: |
+          python - <<'PY'
+          from zipfile import ZipFile
+          from pathlib import Path
+          import json
+          p = Path("source-upload/Real-Water-Light-Android-MBLoader.mcpack")
+          if not p.exists():
+              raise SystemExit("Claude mcpack not found")
+          with ZipFile(p) as z:
+              names = z.namelist()
+              print("PACKAGE CONTENTS:")
+              for n in names:
+                  info = z.getinfo(n)
+                  print(f"{info.file_size:>10}  {n}")
+              print("\nMANIFEST:")
+              if "manifest.json" in names:
+                  print(z.read("manifest.json").decode("utf-8", "replace"))
+              print("\nSOURCE-LIKE FILES:")
+              for n in names:
+                  if n.lower().endswith((".h", ".hpp", ".glsl", ".vert", ".frag", ".fx", ".json", ".material")):
+                      data = z.read(n)
+                      print(f"--- {n} ({len(data)} bytes) ---")
+                      if len(data) <= 20000:
+                          print(data.decode("utf-8", "replace"))
+          PY
