@@ -1,5 +1,5 @@
 name = "EIVORIS Shader"
-version = [0, 2, 2]
+version = [0, 2, 3]
 min_supported_mc_version = [1, 26, 0]
 description = '''
 §r§l§5EIVORIS SHADER§r
@@ -12,13 +12,13 @@ uuid = "7e6d2f41-8b93-4e0f-a7c1-5d92e4b60f31"
 materials = ["Actor", "ActorGlint", "ActorMultiTexture", "Clouds", "EndSky", "ItemInHandColor", "ItemInHandColorGlint", "ItemInHandTextured", "RenderChunk", "Sky", "Stars", "SunMoon", "Weather"]
 [info]
 copyright = '''
-EIVORIS water implementation and integration.
+EIVORIS water and BSL-inspired lighting implementation and integration.
 The upstream RenderDragon shader framework is Newb X Legacy by devendrn
 and contributors, licensed under MIT. See THIRD_PARTY_NOTICES.md.
 '''
 credits = '''
 NEWB X Legacy — devendrn and contributors.
-EIVORIS water implementation — EIVORIS Team.
+EIVORIS water and lighting implementation — EIVORIS Team.
 '''
 [[subpack]]
 define = "DEFAULT"
