@@ -1,5 +1,7 @@
 name: Inspect Claude Shader Package
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
