@@ -15,11 +15,12 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/devendrn/newb-x-mcbe.git upstream
           git -C upstream rev-parse HEAD
-      - name: Apply EIVORIS water implementation
+      - name: Apply EIVORIS water and lighting
         run: |
           cp src/eivoris/config.h upstream/src/newb/config.h
           cp src/eivoris/pack_config.toml upstream/src/newb/pack_config.toml
           cp src/eivoris/functions/water.h upstream/src/newb/functions/water.h
+          python scripts/apply_bsl_lighting.py
       - name: Install build dependencies
         working-directory: upstream
         run: python -m pip install -r requirements.txt
