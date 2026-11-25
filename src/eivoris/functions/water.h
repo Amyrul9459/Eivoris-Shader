@@ -11,60 +11,43 @@
 // Independent world-space wave model. NEWB is used only for engine integration.
 // The surface field is continuous across adjacent water blocks.
 
-// Four-band directional wave field. No per-vertex texture fetches or
-// finite-difference height resampling: the normal is derived analytically.
+// Four-band directional wave field. Height and analytic normal are evaluated
+// together so every vertex computes each wave phase only once.
 float eivorisWave(vec2 p, vec2 direction, float wavelength, float speed,
-                  float amplitude, float phase, highp float t) {
+                  float amplitude, float phase, highp float t, inout vec2 gradient) {
   float k = 6.2831853 / wavelength;
   float theta = k * dot(p, direction) - speed * t + phase;
-  return amplitude * (sin(theta) + 0.18 * sin(2.0 * theta + 0.7));
-}
-
-vec2 eivorisWaveGradient(vec2 p, vec2 direction, float wavelength, float speed,
-                         float amplitude, float phase, highp float t) {
-  float k = 6.2831853 / wavelength;
-  float theta = k * dot(p, direction) - speed * t + phase;
+  float fundamental = sin(theta);
+  float harmonic = sin(2.0 * theta + 0.7);
   float derivative = amplitude * k *
     (cos(theta) + 0.36 * cos(2.0 * theta + 0.7));
-  return direction * derivative;
+  gradient += direction * derivative;
+  return amplitude * (fundamental + 0.18 * harmonic);
 }
 
-float eivorisWaterRawHeight(vec2 p, highp float t) {
+vec3 eivorisWaterField(vec2 p, highp float t) {
   highp float waveTime = t * 1.35;
-  float h = 0.0;
-  h += eivorisWave(p, normalize(vec2(0.91, 0.41)), 8.4, 0.52, 0.078, 0.2, waveTime);
-  h += eivorisWave(p, normalize(vec2(-0.36, 0.93)), 5.9, 0.73, 0.052, 2.1, waveTime);
-  h += eivorisWave(p, normalize(vec2(0.57, -0.82)), 4.15, 0.96, 0.034, 4.3, waveTime);
-  h += eivorisWave(p, normalize(vec2(-0.96, -0.27)), 3.35, 1.18, 0.020, 1.4, waveTime);
+  vec2 gradient = vec2(0.0);
+  float height = 0.0;
 
-  // Long, low swells prevent a repetitive sine-only appearance.
-  h += 0.020 * sin(dot(p, vec2(0.19, 0.11)) - 0.22 * waveTime);
-  h += 0.012 * sin(dot(p, vec2(-0.13, 0.21)) + 0.31 * waveTime);
-  return h;
-}
+  height += eivorisWave(p, normalize(vec2(0.91, 0.41)), 8.4, 0.52, 0.078, 0.2, waveTime, gradient);
+  height += eivorisWave(p, normalize(vec2(-0.36, 0.93)), 5.9, 0.73, 0.052, 2.1, waveTime, gradient);
+  height += eivorisWave(p, normalize(vec2(0.57, -0.82)), 4.15, 0.96, 0.034, 4.3, waveTime, gradient);
+  height += eivorisWave(p, normalize(vec2(-0.96, -0.27)), 3.35, 1.18, 0.020, 1.4, waveTime, gradient);
 
-vec2 eivorisWaterRawGradient(vec2 p, highp float t) {
-  highp float waveTime = t * 1.35;
-  vec2 g = vec2(0.0);
-  g += eivorisWaveGradient(p, normalize(vec2(0.91, 0.41)), 8.4, 0.52, 0.078, 0.2, waveTime);
-  g += eivorisWaveGradient(p, normalize(vec2(-0.36, 0.93)), 5.9, 0.73, 0.052, 2.1, waveTime);
-  g += eivorisWaveGradient(p, normalize(vec2(0.57, -0.82)), 4.15, 0.96, 0.034, 4.3, waveTime);
-  g += eivorisWaveGradient(p, normalize(vec2(-0.96, -0.27)), 3.35, 1.18, 0.020, 1.4, waveTime);
-  g += 0.020 * cos(dot(p, vec2(0.19, 0.11)) - 0.22 * waveTime) * vec2(0.19, 0.11);
-  g += 0.012 * cos(dot(p, vec2(-0.13, 0.21)) + 0.31 * waveTime) * vec2(-0.13, 0.21);
-  return g;
-}
+  // Long swells break up repeated wave trains without texture sampling.
+  vec2 swellA = vec2(0.19, 0.11);
+  vec2 swellB = vec2(-0.13, 0.21);
+  float phaseA = dot(p, swellA) - 0.22 * waveTime;
+  float phaseB = dot(p, swellB) + 0.31 * waveTime;
+  height += 0.020 * sin(phaseA) + 0.012 * sin(phaseB);
+  gradient += 0.020 * cos(phaseA) * swellA + 0.012 * cos(phaseB) * swellB;
 
-float eivorisWaterHeight(vec2 p, highp float t) {
-  float raw = eivorisWaterRawHeight(p, t);
-  // Smooth saturation keeps displacement bounded without flat-topped clamps.
-  return raw * inversesqrt(1.0 + raw * raw * 10.0);
-}
-
-vec2 eivorisWaterGradient(vec2 p, highp float t) {
-  float raw = eivorisWaterRawHeight(p, t);
-  float inv = inversesqrt(1.0 + raw * raw * 10.0);
-  return eivorisWaterRawGradient(p, t) * inv * inv * inv;
+  // Smooth saturation bounds displacement and applies its derivative to the normal.
+  float inv = inversesqrt(1.0 + height * height * 10.0);
+  height *= inv;
+  gradient *= inv * inv * inv;
+  return vec3(height, gradient);
 }
 
 float calculateFresnel(float cosTheta, float f0) {
@@ -81,18 +64,19 @@ vec4 nlWater(
   vec2 worldXZ = gPos.xz;
   float distanceFade = 1.0 - smoothstep(38.0, 72.0, camDist);
 
-  // Actual vertex displacement: the water mesh moves vertically in world space.
-  // The analytic gradient avoids four extra noise/height evaluations per vertex.
+  // Height and slope share one phase evaluation for each wave band.
+  vec3 waterField = vec3(0.0);
   if (fractCposY > 0.0) {
     #ifndef NO_WAVE
-      wPos.y += eivorisWaterHeight(worldXZ, t) * distanceFade;
+      waterField = eivorisWaterField(worldXZ, t);
+      wPos.y += waterField.x * distanceFade;
     #endif
   }
 
   vec3 nrm;
   if (fractCposY > 0.0) {
     #ifndef NO_WAVE
-      vec2 slope = eivorisWaterGradient(worldXZ, t) * distanceFade;
+      vec2 slope = waterField.yz * distanceFade;
       nrm = normalize(vec3(slope.x, -1.0, slope.y));
     #else
       nrm = vec3(0.0, -1.0, 0.0);
