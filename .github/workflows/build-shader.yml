@@ -37,13 +37,14 @@ jobs:
           from pathlib import Path
           from zipfile import ZipFile
           import json
-          import re
+          import os
 
-          config = Path("src/newb/pack_config.toml").read_text()
-          match = re.search(r"(?m)^version\\s*=\\s*\\[([^]]+)\\]", config)
-          if not match:
+          config_lines = Path("src/newb/pack_config.toml").read_text().splitlines()
+          version_line = next((line for line in config_lines if line.strip().startswith("version") and "=" in line), None)
+          if version_line is None:
               raise SystemExit("Could not read EIVORIS version from pack_config.toml")
-          version_parts = [part.strip() for part in match.group(1).split(",") if part.strip()]
+          version_value = version_line.split("=", 1)[1].strip().strip("[]")
+          version_parts = [part.strip() for part in version_value.split(",") if part.strip()]
           if not version_parts or not all(part.isdigit() for part in version_parts):
               raise SystemExit("Invalid EIVORIS version in pack_config.toml")
           version = ".".join(version_parts)
@@ -71,13 +72,8 @@ jobs:
               target.unlink()
           pack.rename(target)
           print("Created", target)
-          with open(Path.home() / "version.txt", "w") as f:
-              f.write(version)
-          with open(Path.home() / "version.txt") as f:
-              version = f.read().strip()
-          import os
           with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-              output.write(f"version={version}\\n")
+              print(f"version={version}", file=output)
           PY
       - name: Upload Android MTBinLoader2 pack
         uses: actions/upload-artifact@v4
