@@ -37,7 +37,7 @@ for function in ("nlLighting(", "nlEntityLighting(", "nlUnderwaterLighting("):
 
 water_path = Path("upstream/src/newb/functions/water.h")
 water = water_path.read_text()
-for function in ("eivorisWaterHeight(", "eivorisWaterGradient(", "nlWater("):
+for function in ("eivorisWaterField(", "nlWater("):
     if function not in water:
         raise SystemExit(f"Required EIVORIS water function missing: {function}")
 
