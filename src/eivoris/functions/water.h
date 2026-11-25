@@ -1,143 +1,88 @@
 #ifndef WATER_H
 #define WATER_H
-
 #include "utils.h"
 #include "detection.h"
 #include "sky.h"
+#include "clouds.h"
+#include "noise.h"
 
-// EIVORIS procedural water: independent multi-scale travelling wave field.
-// The field remains analytic and smooth; no copied upstream water code.
-
-float eivorisHash21(vec2 p) {
-  p = fract(p * vec2(123.34, 456.21));
-  p += dot(p, p + 45.32);
-  return fract(p.x * p.y);
+// EIVORIS WATER 0.2: world-space geometric displacement + analytic normals.
+float eivorisWaterHeight(vec2 p, highp float t) {
+  vec2 d0 = normalize(vec2(0.82, 0.57));
+  vec2 d1 = normalize(vec2(-0.48, 0.88));
+  vec2 d2 = normalize(vec2(0.96, -0.28));
+  float k0 = 6.28318530718 / 8.0;
+  float k1 = 6.28318530718 / 4.7;
+  float k2 = 6.28318530718 / 2.9;
+  float q0 = k0 * dot(p, d0) - 0.72 * t + 0.4;
+  float q1 = k1 * dot(p, d1) - 1.02 * t + 2.1;
+  float q2 = k2 * dot(p, d2) - 1.38 * t + 4.0;
+  return 0.105 * sin(q0) + 0.055 * sin(q1) + 0.022 * sin(q2);
 }
-
-vec3 eivorisNoiseGradient(vec2 p) {
-  vec2 cell = floor(p);
-  vec2 f = fract(p);
-  float a = eivorisHash21(cell);
-  float b = eivorisHash21(cell + vec2(1.0, 0.0));
-  float c = eivorisHash21(cell + vec2(0.0, 1.0));
-  float d = eivorisHash21(cell + vec2(1.0, 1.0));
-  vec2 u = f * f * (3.0 - 2.0 * f);
-  vec2 du = 6.0 * f * (1.0 - f);
-  float ab = mix(a, b, u.x);
-  float cd = mix(c, d, u.x);
-  float value = mix(ab, cd, u.y);
-  float dx = mix((b - a) * du.x, (d - c) * du.x, u.y);
-  float dy = (cd - ab) * du.y;
-  return vec3(value, dx, dy);
+vec2 eivorisWaterGradient(vec2 p, highp float t) {
+  vec2 d0 = normalize(vec2(0.82, 0.57));
+  vec2 d1 = normalize(vec2(-0.48, 0.88));
+  vec2 d2 = normalize(vec2(0.96, -0.28));
+  float k0 = 6.28318530718 / 8.0;
+  float k1 = 6.28318530718 / 4.7;
+  float k2 = 6.28318530718 / 2.9;
+  float q0 = k0 * dot(p, d0) - 0.72 * t + 0.4;
+  float q1 = k1 * dot(p, d1) - 1.02 * t + 2.1;
+  float q2 = k2 * dot(p, d2) - 1.38 * t + 4.0;
+  return d0 * (0.105 * k0 * cos(q0))
+       + d1 * (0.055 * k1 * cos(q1))
+       + d2 * (0.022 * k2 * cos(q2));
 }
-
-// Four crossing wave bands. Amplitude is increased about 40% and phase
-// velocity about 18%; smooth sine profiles are retained.
-vec3 eivorisWaterWaveField(vec2 worldXZ, float time) {
-  vec3 field = vec3(0.0);
-  float p0 = dot(worldXZ, vec2(0.80, 0.60)) * 1.85 + time * 1.60;
-  float p1 = dot(worldXZ, vec2(-0.48, 0.88)) * 2.95 - time * 2.05;
-  float p2 = dot(worldXZ, vec2(0.96, -0.28)) * 4.35 + time * 2.60;
-  float p3 = dot(worldXZ, vec2(0.32, 0.95)) * 6.10 - time * 3.10;
-
-  float s0 = sin(p0), c0 = cos(p0);
-  float s1 = sin(p1), c1 = cos(p1);
-  float s2 = sin(p2), c2 = cos(p2);
-  float s3 = sin(p3), c3 = cos(p3);
-
-  field.x += 0.0190 * s0;
-  field.yz += 0.0190 * 1.85 * c0 * vec2(0.80, 0.60);
-  field.x += 0.0130 * s1;
-  field.yz += 0.0130 * 2.95 * c1 * vec2(-0.48, 0.88);
-  field.x += 0.0080 * s2;
-  field.yz += 0.0080 * 4.35 * c2 * vec2(0.96, -0.28);
-  field.x += 0.0045 * s3;
-  field.yz += 0.0045 * 6.10 * c3 * vec2(0.32, 0.95);
-  return field;
-}
-
-vec2 eivorisWaterSlope(vec2 worldXZ, float time) {
-  vec2 p0 = worldXZ * vec2(0.75, 0.62) + vec2(time * 0.13, -time * 0.084);
-  vec2 p1 = worldXZ * 1.65 + vec2(-time * 0.228, time * 0.156);
-  vec2 p2 = worldXZ * 3.25 + vec2(time * 0.324, time * 0.252);
-  vec3 n0 = eivorisNoiseGradient(p0);
-  vec3 n1 = eivorisNoiseGradient(p1);
-  vec3 n2 = eivorisNoiseGradient(p2);
-  vec2 noiseSlope = n0.yz * vec2(0.75, 0.62) * 0.075
-                  + n1.yz * 1.65 * 0.035
-                  + n2.yz * 3.25 * 0.012;
-  vec3 wave = eivorisWaterWaveField(worldXZ, time);
-  return wave.yz * 1.35 + noiseSlope;
-}
-
-float eivorisWaterFresnel(float cosine, float f0) {
-  float f = 1.0 - clamp(cosine, 0.0, 1.0);
-  float f2 = f * f;
-  return f0 + (1.0 - f0) * f2 * f2 * f;
-}
-
 float calculateFresnel(float cosR, float r0) {
-  return eivorisWaterFresnel(cosR, r0);
+  float f = 1.0 - clamp(abs(cosR), 0.0, 1.0);
+  float f2 = f * f;
+  return r0 + (1.0 - r0) * f2 * f2 * f;
 }
-
 vec4 nlWater(
   inout vec4 color, inout vec3 wPos, nl_skycolor skycol, nl_environment env, vec4 COLOR, vec3 viewDir,
   vec3 cPos, vec3 tiledCpos, vec3 gPos, vec3 CAMERA_POS, vec3 light, vec3 torchColor, vec2 lit,
   float fractCposY, float camDist, highp float t
 ) {
-  vec3 waveField = eivorisWaterWaveField(gPos.xz, t);
-  float displacementFade = 1.0 - smoothstep(12.0, 22.0, camDist);
+  vec2 worldXZ = gPos.xz;
+  float distanceFade = 1.0 - smoothstep(42.0, 76.0, camDist);
+  // Move the actual RenderChunk vertex before it is transformed to clip space.
+  // Maximum displacement is +/-0.182 blocks (about 0.36 blocks crest-to-trough).
   if (fractCposY > 0.0) {
-    wPos.y += waveField.x * displacementFade;
+    #ifndef NO_WAVE
+      wPos.y += eivorisWaterHeight(worldXZ, t) * distanceFade;
+    #endif
   }
-
-  vec2 slope = eivorisWaterSlope(gPos.xz, t);
-  float detailFade = 1.0 - smoothstep(96.0, 176.0, camDist);
-  vec2 waterSlope = slope * mix(0.82, 1.0, detailFade);
-
+  vec2 slope = eivorisWaterGradient(worldXZ, t) * distanceFade;
   vec3 nrm;
   if (fractCposY > 0.0) {
     #ifndef NO_WAVE
-      nrm = normalize(vec3(waterSlope.x, -1.0, waterSlope.y));
+      nrm = normalize(vec3(slope.x, -1.0, slope.y));
     #else
       nrm = vec3(0.0, -1.0, 0.0);
     #endif
   } else {
-    vec2 sideSlope = waterSlope * 0.32;
-    nrm = normalize(vec3(normalize(viewDir.xz) + sideSlope, -0.12));
+    vec2 sideBump = vec2(
+      movingNoise2D(gPos.xz + gPos.yy, NL_WATER_WAVE_SPEED * t, 0.6),
+      movingNoise2D(gPos.zx + gPos.yy, NL_WATER_WAVE_SPEED * t + 1.7, 0.6)
+    );
+    nrm = normalize(vec3(normalize(viewDir.xz) + sideBump * NL_WATER_BUMP * 0.45, -0.12));
   }
-
   float cosR = dot(nrm, viewDir);
   vec3 reflectedDir = viewDir - 2.0 * cosR * nrm;
   vec3 waterRefl = nlRenderSky(skycol, env, reflectedDir, t, false);
-
-  // Torch reflections retain the actual configured source tint.
-  float torchGlint = 0.5 + 0.5 * sin(16.0 * reflectedDir.x)
-                                  * sin(16.0 * reflectedDir.z);
+  // Small-scale animated detail complements, but does not replace, geometry waves.
+  vec2 fine = vec2(
+    movingNoise2D(gPos.xz * 1.35 + gPos.yy, NL_WATER_WAVE_SPEED * t, 0.6),
+    movingNoise2D(gPos.zx * 1.55 + gPos.yy, NL_WATER_WAVE_SPEED * t + 2.4, 0.6)
+  );
   waterRefl += torchColor * NL_TORCHLIGHT_INTENSITY * lit.x
-             * torchGlint * torchGlint;
-
-  // Directional sun and moon specular highlights use the engine's normalized
-  // light directions, not the light-color vector.
-  float sunVisibility = smoothstep(-0.08, 0.18, env.dayFactor);
-  float moonVisibility = 1.0 - smoothstep(-0.18, 0.08, env.dayFactor);
-  float sunAlignment = max(dot(reflectedDir, normalize(env.sunDir)), 0.0);
-  float moonAlignment = max(dot(reflectedDir, normalize(env.moonDir)), 0.0);
-  float sunSpecular = pow(sunAlignment, 150.0);
-  float moonSpecular = pow(moonAlignment, 105.0);
-  vec3 sunColor = mix(NL_DAWN_SUNLIGHT_COL, NL_NOON_SUNLIGHT_COL,
-                      smoothstep(0.05, 0.75, env.dayFactor));
-  vec3 moonColor = vec3(0.48, 0.61, 0.86);
-  waterRefl += sunColor * sunSpecular * (0.82 * sunVisibility * lit.y);
-  waterRefl += moonColor * moonSpecular * (0.48 * moonVisibility * max(lit.y, 0.18));
-
+             * pow(max(0.0, 0.5 + 0.5 * sin(16.0 * reflectedDir.x)
+                                      * sin(16.0 * reflectedDir.z)), 2.0);
   if (!env.end) waterRefl *= 0.05 + lit.y * 1.14;
-  waterRefl *= 1.0 - 0.72 * env.rainFactor;
-
-  cosR = abs(cosR);
-  float fresnel = eivorisWaterFresnel(cosR, 0.075);
-  float opacity = 1.0 - cosR;
-  color.rgb *= 0.22 * NL_WATER_TINT * (1.0 - 0.76 * fresnel);
+  waterRefl *= 1.0 - 0.68 * env.rainFactor;
+  float fresnel = calculateFresnel(cosR, 0.055);
+  float opacity = 1.0 - abs(cosR);
+  color.rgb *= 0.22 * NL_WATER_TINT * (1.0 - 0.78 * fresnel);
   color.a = mix(COLOR.a * NL_WATER_TRANSPARENCY, 1.0, opacity * opacity);
   return vec4(waterRefl, fresnel);
 }
