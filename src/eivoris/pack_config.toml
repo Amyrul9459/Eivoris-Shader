@@ -1,5 +1,5 @@
 name = "EIVORIS Shader"
-version = [0, 2, 0]
+version = [0, 2, 1]
 min_supported_mc_version = [1, 26, 0]
 description = '''
 §r§l§5EIVORIS SHADER§r
