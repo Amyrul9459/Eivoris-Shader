@@ -7,78 +7,64 @@
 #include "clouds.h"
 #include "noise.h"
 
-// EIVORIS WATER ENGINE 0.2.2
+// EIVORIS WATER ENGINE 0.3.0 — analytic, low-cost vertex displacement
 // Independent world-space wave model. NEWB is used only for engine integration.
 // The surface field is continuous across adjacent water blocks.
 
-float eivorisHash21(vec2 p) {
-  p = fract(p * vec2(123.34, 456.21));
-  p += dot(p, p + 45.32);
-  return fract(p.x * p.y);
-}
-
-float eivorisNoise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  float a = eivorisHash21(i);
-  float b = eivorisHash21(i + vec2(1.0, 0.0));
-  float c = eivorisHash21(i + vec2(0.0, 1.0));
-  float d = eivorisHash21(i + vec2(1.0, 1.0));
-  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-}
-
-// Directional wave profile. Unequal wavelengths, speeds and phase offsets
-// prevent the surface from collapsing into synchronized parallel bands.
+// Four-band directional wave field. No per-vertex texture fetches or
+// finite-difference height resampling: the normal is derived analytically.
 float eivorisWave(vec2 p, vec2 direction, float wavelength, float speed,
                   float amplitude, float phase, highp float t) {
   float k = 6.2831853 / wavelength;
   float theta = k * dot(p, direction) - speed * t + phase;
-  // Sharpen the forward face slightly while keeping a rounded trough.
-  float s = sin(theta);
-  return amplitude * (s + 0.18 * sin(2.0 * theta + 0.7));
+  return amplitude * (sin(theta) + 0.18 * sin(2.0 * theta + 0.7));
+}
+
+vec2 eivorisWaveGradient(vec2 p, vec2 direction, float wavelength, float speed,
+                         float amplitude, float phase, highp float t) {
+  float k = 6.2831853 / wavelength;
+  float theta = k * dot(p, direction) - speed * t + phase;
+  float derivative = amplitude * k *
+    (cos(theta) + 0.36 * cos(2.0 * theta + 0.7));
+  return direction * derivative;
+}
+
+float eivorisWaterRawHeight(vec2 p, highp float t) {
+  highp float waveTime = t * 1.35;
+  float h = 0.0;
+  h += eivorisWave(p, normalize(vec2(0.91, 0.41)), 8.4, 0.52, 0.078, 0.2, waveTime);
+  h += eivorisWave(p, normalize(vec2(-0.36, 0.93)), 5.9, 0.73, 0.052, 2.1, waveTime);
+  h += eivorisWave(p, normalize(vec2(0.57, -0.82)), 4.15, 0.96, 0.034, 4.3, waveTime);
+  h += eivorisWave(p, normalize(vec2(-0.96, -0.27)), 3.35, 1.18, 0.020, 1.4, waveTime);
+
+  // Long, low swells prevent a repetitive sine-only appearance.
+  h += 0.020 * sin(dot(p, vec2(0.19, 0.11)) - 0.22 * waveTime);
+  h += 0.012 * sin(dot(p, vec2(-0.13, 0.21)) + 0.31 * waveTime);
+  return h;
+}
+
+vec2 eivorisWaterRawGradient(vec2 p, highp float t) {
+  highp float waveTime = t * 1.35;
+  vec2 g = vec2(0.0);
+  g += eivorisWaveGradient(p, normalize(vec2(0.91, 0.41)), 8.4, 0.52, 0.078, 0.2, waveTime);
+  g += eivorisWaveGradient(p, normalize(vec2(-0.36, 0.93)), 5.9, 0.73, 0.052, 2.1, waveTime);
+  g += eivorisWaveGradient(p, normalize(vec2(0.57, -0.82)), 4.15, 0.96, 0.034, 4.3, waveTime);
+  g += eivorisWaveGradient(p, normalize(vec2(-0.96, -0.27)), 3.35, 1.18, 0.020, 1.4, waveTime);
+  g += 0.020 * cos(dot(p, vec2(0.19, 0.11)) - 0.22 * waveTime) * vec2(0.19, 0.11);
+  g += 0.012 * cos(dot(p, vec2(-0.13, 0.21)) + 0.31 * waveTime) * vec2(-0.13, 0.21);
+  return g;
 }
 
 float eivorisWaterHeight(vec2 p, highp float t) {
-  // 35% faster temporal evolution without increasing wave amplitude or shader cost.
-  highp float waveTime = t * 1.35;
-  // Keep the displacement field continuous in world XZ. The previous hard
-  // clamp flattened crests into plateaus, which read as square/blocky steps.
-  float n0 = eivorisNoise(p * 0.072 + vec2(0.010 * waveTime, -0.007 * waveTime));
-  float n1 = eivorisNoise(p * 0.135 + vec2(-0.013 * waveTime, 0.011 * waveTime) + 19.7);
-
-  // Low-frequency domain warp only: enough irregularity to break parallel
-  // wave trains without introducing high-frequency vertex aliasing.
-  vec2 warp;
-  warp.x = eivorisNoise(p * 0.041 + vec2(0.008 * waveTime, 0.011 * waveTime));
-  warp.y = eivorisNoise(p * 0.047 + vec2(-0.010 * waveTime, 0.006 * waveTime) + 31.4);
-  vec2 q = p + (warp - 0.5) * 1.55;
-
-  float waves = 0.0;
-  waves += eivorisWave(q, normalize(vec2(0.91, 0.41)), 8.4, 0.52, 0.078, 0.2, waveTime);
-  waves += eivorisWave(q, normalize(vec2(-0.36, 0.93)), 5.9, 0.73, 0.052, 2.1, waveTime);
-  waves += eivorisWave(q, normalize(vec2(0.57, -0.82)), 4.15, 0.96, 0.034, 4.3, waveTime);
-  waves += eivorisWave(q, normalize(vec2(-0.96, -0.27)), 3.35, 1.18, 0.020, 1.4, waveTime);
-
-  // Uneven long swells plus restrained short-scale roughness.
-  float swell = (n0 - 0.5) * 0.060;
-  float rough = (n1 - 0.5) * 0.032;
-  float raw = waves + swell + rough;
-
-  // Soft saturation preserves rounded crests/troughs; unlike clamp(), it
-  // never creates a flat height plateau that can look like a square wave.
-  float bounded = raw * inversesqrt(1.0 + raw * raw * 10.0);
-  return bounded * (bounded < 0.0 ? 1.12 : 0.98);
+  float raw = eivorisWaterRawHeight(p, t);
+  // Smooth saturation keeps displacement bounded without flat-topped clamps.
+  return raw * inversesqrt(1.0 + raw * raw * 10.0);
 }
 
-// Central differences evaluate the actual deformed height field, including warp.
 vec2 eivorisWaterGradient(vec2 p, highp float t) {
-  const float e = 0.06;
-  float xp = eivorisWaterHeight(p + vec2(e, 0.0), t);
-  float xm = eivorisWaterHeight(p - vec2(e, 0.0), t);
-  float zp = eivorisWaterHeight(p + vec2(0.0, e), t);
-  float zm = eivorisWaterHeight(p - vec2(0.0, e), t);
-  return vec2((xp - xm) / (2.0 * e), (zp - zm) / (2.0 * e));
+  float raw = eivorisWaterRawHeight(p, t);
+  float inv = inversesqrt(1.0 + raw * raw * 10.0);
+  return eivorisWaterRawGradient(p, t) * inv * inv * inv;
 }
 
 float calculateFresnel(float cosTheta, float f0) {
@@ -96,6 +82,7 @@ vec4 nlWater(
   float distanceFade = 1.0 - smoothstep(38.0, 72.0, camDist);
 
   // Actual vertex displacement: the water mesh moves vertically in world space.
+  // The analytic gradient avoids four extra noise/height evaluations per vertex.
   if (fractCposY > 0.0) {
     #ifndef NO_WAVE
       wPos.y += eivorisWaterHeight(worldXZ, t) * distanceFade;
