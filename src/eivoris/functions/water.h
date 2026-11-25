@@ -75,7 +75,7 @@ vec2 eivorisWaterGradient(vec2 p, highp float t) {
   return vec2((xp - xm) / (2.0 * e), (zp - zm) / (2.0 * e));
 }
 
-float eivorisFresnel(float cosTheta, float f0) {
+float calculateFresnel(float cosTheta, float f0) {
   float f = 1.0 - clamp(abs(cosTheta), 0.0, 1.0);
   float f2 = f * f;
   return f0 + (1.0 - f0) * f2 * f2 * f;
@@ -143,7 +143,7 @@ vec4 nlWater(
   if (!env.end) waterRefl *= 0.05 + lit.y * 1.14;
   waterRefl *= 1.0 - 0.68 * env.rainFactor;
 
-  float fresnel = eivorisFresnel(cosR, 0.055);
+  float fresnel = calculateFresnel(cosR, 0.055);
   float opacity = 1.0 - abs(cosR);
   color.rgb *= 0.22 * NL_WATER_TINT * (1.0 - 0.78 * fresnel);
   color.a = mix(COLOR.a * NL_WATER_TRANSPARENCY, 1.0, opacity * opacity);
