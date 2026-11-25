@@ -16,6 +16,8 @@ required = (
     "NL_MIN_LIGHTING_BOOST",
     "NL_OVERWORLD_TORCH_COL",
     "NL_NIGHT_MOONLIGHT_COL",
+    "NL_WATER_WAVE_SPEED",
+    "NL_WATER_TINT",
 )
 for key in required:
     matches = re.findall(rf"^\s*#define\s+{key}\s+[^\n]+$", text, flags=re.M)
@@ -25,4 +27,18 @@ for key in required:
 if not re.search(r"^\s*#define\s+NL_TINT\s*$", text, flags=re.M):
     raise SystemExit("EIVORIS color grading macro NL_TINT is missing")
 
-print("Validated EIVORIS lighting profile; no upstream values were overwritten.")
+lighting_path = Path("upstream/src/newb/functions/lighting.h")
+if not lighting_path.exists():
+    raise SystemExit("EIVORIS lighting source was not copied into NEWB")
+lighting = lighting_path.read_text()
+for function in ("nlLighting(", "nlEntityLighting(", "nlUnderwaterLighting("):
+    if function not in lighting:
+        raise SystemExit(f"Required EIVORIS lighting function missing: {function}")
+
+water_path = Path("upstream/src/newb/functions/water.h")
+water = water_path.read_text()
+for function in ("eivorisWaterHeight(", "eivorisWaterGradient(", "nlWater("):
+    if function not in water:
+        raise SystemExit(f"Required EIVORIS water function missing: {function}")
+
+print("Validated EIVORIS config, water engine and lighting source.")
