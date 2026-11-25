@@ -1,9 +1,9 @@
 name = "EIVORIS Shader"
-version = [0, 2, 3]
+version = [0, 2, 4]
 min_supported_mc_version = [1, 26, 0]
 description = '''
 §r§l§5EIVORIS SHADER§r
-§7NEWB X Legacy foundation • EIVORIS 3D Water
+§7NEWB X Legacy foundation • EIVORIS Rough 3D Water
 %v
 '''
 authors = ["EIVORIS Team"]
