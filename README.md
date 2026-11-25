@@ -6,13 +6,21 @@ EIVORIS PHOTON is a Photon-inspired Bedrock shader built on the NEWB X Legacy Re
 
 The water implementation targets actual vertex displacement in the RenderChunk vertex stage, not normal-map animation alone:
 
-- Three directional wave bands with different wavelengths and speeds.
+- Four directional wave bands with different wavelengths and speeds.
+- 35% faster temporal evolution for the wave field, without increasing displacement amplitude or shader sampling cost.
 - World-space height displacement applied to water-surface vertices before projection.
 - Analytic derivatives of the same height field for reflection normals.
 - Fresnel reflection, NEWB sky reflection and animated fine-scale surface detail.
 - Distance fade to reduce far-field vertex shimmer.
 
 **Geometry limitation:** RenderChunk can only displace vertices Minecraft supplies. It cannot subdivide the water mesh. If the vanilla water surface has only a few vertices per block, displacement may appear as coarse planar facets rather than a continuously tessellated ocean. The Android build must be tested in-game before amplitude, wavelength or mesh limitations can be judged.
+
+## Current visual tuning
+
+- ACES tone mapping with a brighter, more balanced daylight profile.
+- Reduced shadow crush and stronger minimum-light lift.
+- Warm amber torch emission and restrained cool-shadow / warm-highlight grading.
+- The build validation script checks the EIVORIS profile instead of overwriting it with separate NEWB values.
 
 ## Build and test
 
