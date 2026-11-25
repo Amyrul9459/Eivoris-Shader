@@ -40,29 +40,33 @@ float eivorisWave(vec2 p, vec2 direction, float wavelength, float speed,
 }
 
 float eivorisWaterHeight(vec2 p, highp float t) {
-  float n0 = eivorisNoise(p * 0.105 + vec2(0.013 * t, -0.009 * t));
-  float n1 = eivorisNoise(p * 0.245 + vec2(-0.021 * t, 0.017 * t) + 19.7);
+  // Keep the displacement field continuous in world XZ. The previous hard
+  // clamp flattened crests into plateaus, which read as square/blocky steps.
+  float n0 = eivorisNoise(p * 0.072 + vec2(0.010 * t, -0.007 * t));
+  float n1 = eivorisNoise(p * 0.135 + vec2(-0.013 * t, 0.011 * t) + 19.7);
 
-  // Slowly moving domain warp makes wave paths bend and drift over time.
+  // Low-frequency domain warp only: enough irregularity to break parallel
+  // wave trains without introducing high-frequency vertex aliasing.
   vec2 warp;
-  warp.x = eivorisNoise(p * 0.071 + vec2(0.010 * t, 0.014 * t));
-  warp.y = eivorisNoise(p * 0.083 + vec2(-0.016 * t, 0.008 * t) + 31.4);
-  vec2 q = p + (warp - 0.5) * 2.2;
+  warp.x = eivorisNoise(p * 0.041 + vec2(0.008 * t, 0.011 * t));
+  warp.y = eivorisNoise(p * 0.047 + vec2(-0.010 * t, 0.006 * t) + 31.4);
+  vec2 q = p + (warp - 0.5) * 1.55;
 
   float waves = 0.0;
-  waves += eivorisWave(q, normalize(vec2(0.91, 0.41)), 7.2, 0.58, 0.038, 0.2, t);
-  waves += eivorisWave(q, normalize(vec2(-0.36, 0.93)), 4.8, 0.86, 0.026, 2.1, t);
-  waves += eivorisWave(q, normalize(vec2(0.57, -0.82)), 3.45, 1.13, 0.017, 4.3, t);
-  waves += eivorisWave(q, normalize(vec2(-0.96, -0.27)), 2.65, 1.47, 0.010, 1.4, t);
+  waves += eivorisWave(q, normalize(vec2(0.91, 0.41)), 8.4, 0.52, 0.078, 0.2, t);
+  waves += eivorisWave(q, normalize(vec2(-0.36, 0.93)), 5.9, 0.73, 0.052, 2.1, t);
+  waves += eivorisWave(q, normalize(vec2(0.57, -0.82)), 4.15, 0.96, 0.034, 4.3, t);
+  waves += eivorisWave(q, normalize(vec2(-0.96, -0.27)), 3.35, 1.18, 0.020, 1.4, t);
 
-  // Broad swell and fine unevenness are independent from the directional waves.
-  float swell = (n0 - 0.5) * 0.035;
-  float rough = (n1 - 0.5) * 0.020;
+  // Uneven long swells plus restrained short-scale roughness.
+  float swell = (n0 - 0.5) * 0.060;
+  float rough = (n1 - 0.5) * 0.032;
   float raw = waves + swell + rough;
 
-  // Asymmetric crest/trough profile: visible dips, restrained upward rise.
-  float shaped = raw < 0.0 ? raw * 1.18 : raw * 0.72;
-  return clamp(shaped, -0.135, 0.065);
+  // Soft saturation preserves rounded crests/troughs; unlike clamp(), it
+  // never creates a flat height plateau that can look like a square wave.
+  float bounded = raw * inversesqrt(1.0 + raw * raw * 10.0);
+  return bounded * (bounded < 0.0 ? 1.12 : 0.98);
 }
 
 // Central differences evaluate the actual deformed height field, including warp.
@@ -126,12 +130,13 @@ vec4 nlWater(
   #endif
 
   float sunAlignment = max(dot(skyReflectionDir, normalize(env.sunDir)), 0.0);
-  float sunDisk = pow(sunAlignment, 190.0);
-  float sunHalo = pow(sunAlignment, 38.0);
+  // Broad, low-energy specular lobe: soft sun reflection, not a hard white dot.
+  float sunDisk = pow(sunAlignment, 30.0);
+  float sunHalo = pow(sunAlignment, 10.0);
   float daylight = (1.0 - env.rainFactor) * smoothstep(-0.20, 0.08, env.dayFactor);
-  vec3 sunColor = mix(vec3(1.0, 0.46, 0.24), vec3(1.0, 0.88, 0.72),
+  vec3 sunColor = mix(vec3(1.0, 0.48, 0.30), vec3(1.0, 0.90, 0.78),
                       smoothstep(-0.10, 0.65, env.dayFactor));
-  waterRefl += sunColor * (1.20 * sunDisk + 0.12 * sunHalo) * daylight;
+  waterRefl += sunColor * (0.34 * sunDisk + 0.075 * sunHalo) * daylight;
 
   float moonAlignment = max(dot(skyReflectionDir, normalize(env.moonDir)), 0.0);
   float moonGlint = pow(moonAlignment, 120.0) * smoothstep(0.05, 0.55, -env.dayFactor);
