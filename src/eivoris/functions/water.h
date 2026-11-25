@@ -40,23 +40,25 @@ float eivorisWave(vec2 p, vec2 direction, float wavelength, float speed,
 }
 
 float eivorisWaterHeight(vec2 p, highp float t) {
+  // 35% faster temporal evolution without increasing wave amplitude or shader cost.
+  highp float waveTime = t * 1.35;
   // Keep the displacement field continuous in world XZ. The previous hard
   // clamp flattened crests into plateaus, which read as square/blocky steps.
-  float n0 = eivorisNoise(p * 0.072 + vec2(0.010 * t, -0.007 * t));
-  float n1 = eivorisNoise(p * 0.135 + vec2(-0.013 * t, 0.011 * t) + 19.7);
+  float n0 = eivorisNoise(p * 0.072 + vec2(0.010 * waveTime, -0.007 * waveTime));
+  float n1 = eivorisNoise(p * 0.135 + vec2(-0.013 * waveTime, 0.011 * waveTime) + 19.7);
 
   // Low-frequency domain warp only: enough irregularity to break parallel
   // wave trains without introducing high-frequency vertex aliasing.
   vec2 warp;
-  warp.x = eivorisNoise(p * 0.041 + vec2(0.008 * t, 0.011 * t));
-  warp.y = eivorisNoise(p * 0.047 + vec2(-0.010 * t, 0.006 * t) + 31.4);
+  warp.x = eivorisNoise(p * 0.041 + vec2(0.008 * waveTime, 0.011 * waveTime));
+  warp.y = eivorisNoise(p * 0.047 + vec2(-0.010 * waveTime, 0.006 * waveTime) + 31.4);
   vec2 q = p + (warp - 0.5) * 1.55;
 
   float waves = 0.0;
-  waves += eivorisWave(q, normalize(vec2(0.91, 0.41)), 8.4, 0.52, 0.078, 0.2, t);
-  waves += eivorisWave(q, normalize(vec2(-0.36, 0.93)), 5.9, 0.73, 0.052, 2.1, t);
-  waves += eivorisWave(q, normalize(vec2(0.57, -0.82)), 4.15, 0.96, 0.034, 4.3, t);
-  waves += eivorisWave(q, normalize(vec2(-0.96, -0.27)), 3.35, 1.18, 0.020, 1.4, t);
+  waves += eivorisWave(q, normalize(vec2(0.91, 0.41)), 8.4, 0.52, 0.078, 0.2, waveTime);
+  waves += eivorisWave(q, normalize(vec2(-0.36, 0.93)), 5.9, 0.73, 0.052, 2.1, waveTime);
+  waves += eivorisWave(q, normalize(vec2(0.57, -0.82)), 4.15, 0.96, 0.034, 4.3, waveTime);
+  waves += eivorisWave(q, normalize(vec2(-0.96, -0.27)), 3.35, 1.18, 0.020, 1.4, waveTime);
 
   // Uneven long swells plus restrained short-scale roughness.
   float swell = (n0 - 0.5) * 0.060;
